@@ -1,0 +1,14 @@
+services:
+  postgres:
+    image: postgres:16
+    container_name: renewstation-postgres
+    restart: unless-stopped
+
+    # Variables utilisées par l'image Postgres officielle
+    environment:
+      POSTGRES_DB: ${GAUSSDB_DB_SILVER:-silver}
+      POSTGRES_USER: ${GAUSSDB_USER:-postgres}
+      POSTGRES_PASSWORD: ${GAUSSDB_PASSWORD:-postgres}
+
+    ports:
+      - "5432:5432"
