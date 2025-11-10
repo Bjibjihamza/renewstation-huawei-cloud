@@ -3,12 +3,19 @@ services:
     image: postgres:16
     container_name: renewstation-postgres
     restart: unless-stopped
-
-    # Variables utilisées par l'image Postgres officielle
     environment:
       POSTGRES_DB: ${GAUSSDB_DB_SILVER:-silver}
       POSTGRES_USER: ${GAUSSDB_USER:-postgres}
       POSTGRES_PASSWORD: ${GAUSSDB_PASSWORD:-postgres}
-
     ports:
       - "5432:5432"
+
+  pgadmin:
+    image: dpage/pgadmin4
+    container_name: renewstation-pgadmin
+    restart: unless-stopped
+    environment:
+      PGADMIN_DEFAULT_EMAIL: admin@local.test
+      PGADMIN_DEFAULT_PASSWORD: admin
+    ports:
+      - "5050:80"
