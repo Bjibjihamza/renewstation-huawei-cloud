@@ -3,6 +3,9 @@ import numpy as np
 import random
 import os
 
+from pipeline.load.energy_loader import load_energy_consumption_to_db
+
+
 # Set random seed for reproducibility
 random.seed(42)
 np.random.seed(42)
@@ -526,6 +529,9 @@ os.makedirs(output_dir, exist_ok=True)
 output_path = os.path.join(output_dir, 'energy_consumption.csv')
 combined_df.to_csv(output_path, index=False)
 print(f"  ✓ {output_path} | Total rows: {len(combined_df):,}")
+
+load_energy_consumption_to_db(combined_df)
+
 
 print("\n" + "=" * 80)
 print(f"✅ SUCCÈS! Dataset avec PATTERNS UNIQUES pour chaque bâtiment")
