@@ -1,3 +1,0 @@
-# Ignore everything inside campus/data/Entire except README.md
-campus/data/Entire/*
-!campus/data/Entire/README.md
