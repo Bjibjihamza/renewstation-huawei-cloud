@@ -67,27 +67,49 @@ WITH (orientation = column, compression = low);
 -- TABLE 2: WEATHER FORECAST – HOURLY (CASABLANCA, 3-DAY HORIZON)
 -- =============================================================================
 
-CREATE TABLE weather_forecast_hourly (
-    -- Date & time (local Casablanca time)
-    forecast_date            DATE         NOT NULL,      -- 'Date'
-    forecast_time_of_day     TIME         NOT NULL,      -- 'Heure' (HH:MM)
+-- Ajoutez ceci dans databases/silver.sql
 
-    -- Core weather metrics
-    temperature_c            NUMERIC(5,2),              -- 'Temperature (°C)'
-    humidity_pct             NUMERIC(5,2),              -- 'Humidité (%)'
-    precipitation_mm         NUMERIC(6,3),              -- 'Précipitation (mm)'
-    precipitation_prob_pct   NUMERIC(5,2),              -- 'Probabilité Pluie (%)'
-    conditions_text          VARCHAR(100),              -- 'Conditions' (French description)
-    wind_speed_kmh           NUMERIC(6,2),              -- 'Vitesse Vent (km/h)'
-    wind_direction_deg       NUMERIC(5,1),              -- 'Direction Vent (°)'
-    pressure_hpa             NUMERIC(7,2),              -- 'Pression (hPa)'
-    cloud_cover_pct          NUMERIC(5,2),              -- 'Couverture Nuageuse (%)'
+-- ============================================================================
+-- Table: weather_forecast_hourly
+-- Description: Prévisions météo horaires pour Casablanca
+-- ============================================================================
 
-    -- Logical key: one forecast per date+hour
-    CONSTRAINT pk_weather_forecast PRIMARY KEY (forecast_date, forecast_time_of_day)
-)
-DISTRIBUTE BY HASH(forecast_date)
-WITH (orientation = column, compression = low);
+CREATE TABLE IF NOT EXISTS weather_forecast_hourly (
+    id SERIAL PRIMARY KEY,
+    forecast_timestamp TIMESTAMP NOT NULL,
+    forecast_date DATE NOT NULL,
+    forecast_time TIME NOT NULL,
+    temperature_c NUMERIC(5, 2),
+    humidity_pct NUMERIC(5, 2),
+    precipitation_mm NUMERIC(6, 2),
+    precipitation_probability_pct NUMERIC(5, 2),
+    weather_conditions VARCHAR(100),
+    wind_speed_kmh NUMERIC(6, 2),
+    wind_direction_deg NUMERIC(5, 2),
+    pressure_hpa NUMERIC(7, 2),
+    cloud_cover_pct NUMERIC(5, 2),
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Index pour améliorer les performances
+CREATE INDEX IF NOT EXISTS idx_weather_forecast_timestamp 
+    ON weather_forecast_hourly(forecast_timestamp);
+
+CREATE INDEX IF NOT EXISTS idx_weather_forecast_date 
+    ON weather_forecast_hourly(forecast_date);
+
+-- Commentaires
+COMMENT ON TABLE weather_forecast_hourly IS 'Prévisions météo horaires récupérées depuis Open-Meteo API';
+COMMENT ON COLUMN weather_forecast_hourly.forecast_timestamp IS 'Date et heure de la prévision';
+COMMENT ON COLUMN weather_forecast_hourly.temperature_c IS 'Température en degrés Celsius';
+COMMENT ON COLUMN weather_forecast_hourly.humidity_pct IS 'Humidité relative en pourcentage';
+COMMENT ON COLUMN weather_forecast_hourly.precipitation_mm IS 'Précipitation en millimètres';
+COMMENT ON COLUMN weather_forecast_hourly.precipitation_probability_pct IS 'Probabilité de pluie en pourcentage';
+COMMENT ON COLUMN weather_forecast_hourly.weather_conditions IS 'Description des conditions météo';
+COMMENT ON COLUMN weather_forecast_hourly.wind_speed_kmh IS 'Vitesse du vent en km/h';
+COMMENT ON COLUMN weather_forecast_hourly.wind_direction_deg IS 'Direction du vent en degrés';
+COMMENT ON COLUMN weather_forecast_hourly.pressure_hpa IS 'Pression atmosphérique en hPa';
+COMMENT ON COLUMN weather_forecast_hourly.cloud_cover_pct IS 'Couverture nuageuse en pourcentage';
 -- =============================================================================
 
 -- END OF SILVER LAYER DEFINITION (for now).
