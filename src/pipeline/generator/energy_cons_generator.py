@@ -2,16 +2,17 @@ import os
 import sys
 import random
 from pathlib import Path
-from datetime import datetime
+from datetime import datetime, timedelta  ### UPDATED: Added timedelta
 
 import numpy as np
 import pandas as pd
+import argparse  ### UPDATED: Added for mode/end_date
 
 # Add project root to Python path
 PROJECT_ROOT = Path(__file__).resolve().parents[3]
 sys.path.insert(0, str(PROJECT_ROOT))
 
-from src.pipeline.load.energy_loader import load_energy_consumption_to_db
+from src.pipeline.load.energy_loader import load_energy_consumption_to_db  ### UPDATED: Uses upsert internally
 from src.pipeline.load.weather_loader import get_db_connection
 
 # ============================================================================
@@ -69,15 +70,19 @@ occupancy_range = {
 #   RÉCUPÉRATION DES DONNÉES MÉTÉO RÉELLES DEPUIS LA BASE
 # ============================================================================
 
-def fetch_real_weather_data():
+### UPDATED: Added end_date param for recent mode
+def fetch_real_weather_data(end_date=None):
     """
     Récupère les données météo réelles depuis weather_forecast_hourly
-    à partir du 2024-01-01 jusqu'à aujourd'hui.
+    à partir du 2024-01-01 jusqu'à end_date (default: NOW()).
     
     Retourne un DataFrame avec les colonnes nécessaires pour la génération.
     """
+    if end_date is None:
+        end_date = datetime.now()
+    
     print("\n" + "=" * 80)
-    print("📡 RÉCUPÉRATION DES DONNÉES MÉTÉO RÉELLES DEPUIS LA BASE")
+    print(f"📡 RÉCUPÉRATION DES DONNÉES MÉTÉO RÉELLES DEPUIS LA BASE (jusqu'à {end_date})")
     print("=" * 80)
     
     conn = get_db_connection()
@@ -93,16 +98,16 @@ def fetch_real_weather_data():
             solar_radiation_w_m2
         FROM weather_forecast_hourly
         WHERE forecast_timestamp >= '2024-01-01 00:00:00'
-          AND forecast_timestamp <= NOW()
+          AND forecast_timestamp <= %s
         ORDER BY forecast_timestamp
         """
         
         print("🔍 Exécution de la requête SQL...")
-        cur.execute(query)
+        cur.execute(query, (end_date,))
         rows = cur.fetchall()
         
         if not rows:
-            raise ValueError("❌ Aucune donnée météo trouvée dans la base pour 2024-01-01 à aujourd'hui!")
+            raise ValueError("❌ Aucune donnée météo trouvée dans la base pour 2024-01-01 à end_date!")
         
         df = pd.DataFrame(rows, columns=[
             'Time',
@@ -590,13 +595,21 @@ def generate_building_data(weather_df, building_type, building_number):
 #   FONCTION PRINCIPALE
 # ============================================================================
 
-def main():
+### UPDATED: Added mode logic
+def main(mode="full"):
+    end_date = None
+    if mode == "recent":
+        end_date = datetime.now() - timedelta(hours=6)
+        print("🔄 Mode RECENT: Génération seulement pour les dernières 6h historiques")
+    else:
+        print("🔄 Mode FULL: Génération historique complète")
+    
     print("=" * 80)
     print("🚀 GÉNÉRATION RÉALISTE DES DONNÉES ÉNERGÉTIQUES")
     print("=" * 80)
 
-    # 1) Récupérer les données météo réelles
-    weather_df = fetch_real_weather_data()
+    # 1) Récupérer les données météo réelles (up to end_date)
+    weather_df = fetch_real_weather_data(end_date=end_date)
 
     total_buildings = 0
     all_buildings_data = []
@@ -616,15 +629,18 @@ def main():
             df["Building"] = building_name
             all_buildings_data.append(df)
 
-            # Stats par mois
-            monthly_stats = df.groupby("Month")["Use [kW]"].mean() * 24
-
-            print(f"  ✓ {building_name:25s}")
-            print(f"    Jan: {monthly_stats.get(1, 0):6.1f} | "
-                  f"Apr: {monthly_stats.get(4, 0):6.1f} | "
-                  f"Jul: {monthly_stats.get(7, 0):6.1f} | "
-                  f"Oct: {monthly_stats.get(10, 0):6.1f} | "
-                  f"Dec: {monthly_stats.get(12, 0):6.1f}")
+            # Stats par mois (only if full mode)
+            if mode == "full":
+                monthly_stats = df.groupby("Month")["Use [kW]"].mean() * 24
+                print(f"  ✓ {building_name:25s}")
+                print(f"    Jan: {monthly_stats.get(1, 0):6.1f} | "
+                      f"Apr: {monthly_stats.get(4, 0):6.1f} | "
+                      f"Jul: {monthly_stats.get(7, 0):6.1f} | "
+                      f"Oct: {monthly_stats.get(10, 0):6.1f} | "
+                      f"Dec: {monthly_stats.get(12, 0):6.1f}")
+            else:
+                avg_load = df["Use [kW]"].mean()
+                print(f"  ✓ {building_name:25s} | Avg Load (6h): {avg_load:7.2f} kW")
 
         total_buildings += count
 
@@ -641,7 +657,8 @@ def main():
     data_dir = base_dir / "data"
     os.makedirs(data_dir, exist_ok=True)
 
-    output_path = data_dir / "energy_consumption.csv"
+    prefix = "energy_historical_full" if mode == "full" else "energy_recent_6h"
+    output_path = data_dir / f"{prefix}.csv"
     combined_df.to_csv(output_path, index=False)
     print(f"  ✓ {output_path} | Total rows: {len(combined_df):,}")
 
@@ -670,5 +687,9 @@ def main():
     print("=" * 80)
 
 
+### UPDATED: CLI with argparse
 if __name__ == "__main__":
-    main()
+    parser = argparse.ArgumentParser(description="Energy Consumption Generator")
+    parser.add_argument('--mode', default='full', choices=['full', 'recent'], help="Mode: full historical or recent 6h")
+    args = parser.parse_args()
+    main(mode=args.mode)

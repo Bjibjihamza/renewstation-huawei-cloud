@@ -73,6 +73,7 @@ CREATE INDEX IF NOT EXISTS idx_energy_time_building
 -- Index sur les features temporelles (pour ML queries)
 CREATE INDEX IF NOT EXISTS idx_energy_temporal 
     ON energy_consumption_hourly(month_num, day_of_week, hour_of_day);
+
 -- Columnar + hash distribution by building for good analytical performance.
 -- =============================================================================
 

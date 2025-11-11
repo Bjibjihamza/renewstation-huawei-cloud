@@ -1,14 +1,13 @@
-# src/pipeline/generator/weather_forecasting.py
-
 import os
 from datetime import datetime, timedelta
 from pathlib import Path
 
 import pandas as pd
 import requests
+import argparse  ### UPDATED: Added for mode handling
 
 from src.pipeline.load.weather_loader import (
-    load_weather_forecast_to_db,
+    load_weather_forecast_to_db,  ### UPDATED: Uses upsert internally
     get_db_connection,
 )
 
@@ -43,9 +42,8 @@ HOURLY_VARS = [
 
 TIMEZONE = "Africa/Casablanca"
 
-# 🔥 NOUVEAU : Horizon de prévision (6 heures)
-FORECAST_HORIZON_HOURS = 6
-
+# ### UPDATED: Changed to 1 week as per req
+FORECAST_HORIZON_DAYS = 7  # 1 week
 
 # ============================================================================
 #   FONCTIONS UTILITAIRES
@@ -137,24 +135,24 @@ def _fetch_history_and_load(start_dt: datetime, end_dt: datetime):
     load_weather_forecast_to_db(df)
 
 
-def _fetch_forecast_6h_and_load():
+### UPDATED: Renamed and adjusted for 1-week horizon
+def _fetch_forecast_1w_and_load():
     """
-    🔥 NOUVEAU: Récupère les 6 prochaines heures de prévisions météo
+    Récupère les 7 prochains jours (1 week) de prévisions météo
     et les charge en DB (UPSERT).
     
     Ces données seront plus tard remplacées par des données réelles via backfill.
     """
     print("\n" + "=" * 80)
-    print(f"🔮 PRÉVISIONS MÉTÉO CASABLANCA - {FORECAST_HORIZON_HOURS} heures")
+    print(f"🔮 PRÉVISIONS MÉTÉO CASABLANCA - {FORECAST_HORIZON_DAYS} jours (1 week)")
     print("=" * 80)
 
-    # On demande un jour de prévisions mais on ne garde que 6h
     params = {
         "latitude": LATITUDE,
         "longitude": LONGITUDE,
         "hourly": HOURLY_VARS,
         "timezone": TIMEZONE,
-        "forecast_days": 1,  # Minimum pour avoir des données
+        "forecast_days": FORECAST_HORIZON_DAYS,  ### UPDATED: 7 days
     }
 
     response = requests.get(FORECAST_URL, params=params)
@@ -164,21 +162,18 @@ def _fetch_forecast_6h_and_load():
     hourly_data = data["hourly"]
     df = _build_dataframe_from_hourly(hourly_data)
 
-    # 🔥 FILTRE: garder uniquement les 6 prochaines heures
+    # ### UPDATED: Keep all 1-week data (no filter to 6h)
     now = datetime.now()
     df["__dt"] = pd.to_datetime(df["Date"] + " " + df["Heure"])
-    df = df[
-        (df["__dt"] >= now) & 
-        (df["__dt"] < now + timedelta(hours=FORECAST_HORIZON_HOURS))
-    ].drop(columns="__dt")
+    df = df[df["__dt"] >= now].drop(columns="__dt")  # Only future
 
     if df.empty:
-        print("⚠️ Aucune prévision disponible pour les 6 prochaines heures")
+        print("⚠️ Aucune prévision disponible")
         return
 
-    filename = _save_csv(df, "meteo_casablanca_forecast_6h")
+    filename = _save_csv(df, "meteo_casablanca_forecast_1w")
     print(f"\n📦 Fichier CSV prévisions créé: {filename}")
-    print(f"📊 Nombre d'heures: {len(df)} heures")
+    print(f"📊 Nombre d'heures: {len(df)} heures (~{FORECAST_HORIZON_DAYS*24})")
     print(f"🕐 Période: {df['Date'].min()} {df['Heure'].min()} → {df['Date'].max()} {df['Heure'].max()}")
     print(f"🌐 Source: Open-Meteo Forecast API")
 
@@ -186,14 +181,14 @@ def _fetch_forecast_6h_and_load():
     load_weather_forecast_to_db(df)
 
     print("\n" + "=" * 80)
-    print("✅ SUCCÈS! Prévisions météo (6h) récupérées et chargées en DB")
+    print("✅ SUCCÈS! Prévisions météo (1 week) récupérées et chargées en DB")
     print("⚠️  Ces prévisions seront remplacées par des données réelles plus tard")
     print("=" * 80)
 
 
 def _backfill_forecast_with_real_data():
     """
-    🔥 NOUVEAU: Remplace les prévisions passées par des données réelles.
+    Remplace les prévisions passées par des données réelles.
     
     Logique:
     - Récupère toutes les prévisions dont forecast_timestamp < maintenant
@@ -308,25 +303,29 @@ def _ensure_history_coverage():
 #   FONCTION PRINCIPALE APPELÉE PAR AIRFLOW
 # ============================================================================
 
-def get_hourly_weather_forecast():
+def get_hourly_weather_forecast(mode="full"):
     """
-    🔥 NOUVELLE LOGIQUE:
+    ### UPDATED: Mode-based logic
     
-    1) Vérifie que toutes les heures entre 2024-01-01 et aujourd'hui sont présentes
-       (backfill si nécessaire via API historique).
-    2) Remplace les anciennes prévisions par des données réelles (backfill).
-    3) Récupère les prévisions des 6 prochaines heures via l'API forecast.
+    Modes:
+    - 'full': Full historical backfill (2024-01-01 → NOW) + backfill old forecasts + 1-week forecast
+    - 'recent': Only backfill last 6h with archive (no forecast fetch)
     """
-
     try:
-        # 1) S'assurer que l'historique 2024-01-01 → aujourd'hui est complet
-        _ensure_history_coverage()
+        if mode == "full":
+            # 1) S'assurer que l'historique 2024-01-01 → aujourd'hui est complet
+            _ensure_history_coverage()
 
-        # 2) 🔥 NOUVEAU: Backfill des prévisions passées avec données réelles
-        _backfill_forecast_with_real_data()
+            # 2) Backfill des prévisions passées avec données réelles
+            _backfill_forecast_with_real_data()
 
-        # 3) 🔥 MODIFIÉ: Récupérer et charger UNIQUEMENT 6h de prévision
-        _fetch_forecast_6h_and_load()
+            # 3) Récupérer et charger 1 week de prévision
+            _fetch_forecast_1w_and_load()
+        else:  # 'recent'
+            # Only backfill last 6h historical (no forecast)
+            now_minus_6h = datetime.now() - timedelta(hours=6)
+            _fetch_history_and_load(now_minus_6h, datetime.now())
+            print("✅ Recent backfill (last 6h) terminé - no forecast added")
 
     except requests.exceptions.RequestException as e:
         print(f"❌ Erreur HTTP lors d'un appel Open-Meteo: {e}")
@@ -393,5 +392,9 @@ def get_weather_icon(code: int) -> str:
         return "🌤️"
 
 
+### UPDATED: CLI entrypoint with argparse
 if __name__ == "__main__":
-    get_hourly_weather_forecast()
+    parser = argparse.ArgumentParser(description="Weather Forecasting Pipeline")
+    parser.add_argument('--mode', default='full', choices=['full', 'recent'], help="Mode: full historical + forecast or recent 6h backfill")
+    args = parser.parse_args()
+    get_hourly_weather_forecast(mode=args.mode)

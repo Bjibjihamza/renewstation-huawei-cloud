@@ -1,14 +1,13 @@
-# src/pipeline/generator/generate_energy_6h_forecast.py
-
 """
-🔥 NOUVEAU SCRIPT: Génération d'énergie synthétique pour les 6 prochaines heures
+🔄 BACKFILL ÉNERGIE HISTORIQUE: Dernières 6h seulement
 
-Ce script:
-1. Récupère les 6 prochaines heures de données météo depuis la DB
-2. Génère des données d'énergie synthétiques UNIQUEMENT pour ces 6 heures
+Ce script (repurposed):
+1. Récupère les dernières 6h de données météo HISTORIQUES depuis la DB (archive backfilled)
+2. Génère des données d'énergie synthétiques UNIQUEMENT pour ces 6h HISTORIQUES
 3. Fait un UPSERT dans energy_consumption_hourly
 
-À exécuter après chaque mise à jour météo (toutes les heures par ex.)
+À exécuter après backfill météo récent (toutes les 6h).
+NO FUTURE DATA.
 """
 
 import os
@@ -79,17 +78,18 @@ occupancy_range = {
 
 
 # ============================================================================
-#   RÉCUPÉRATION DES DONNÉES MÉTÉO DES 6 PROCHAINES HEURES
+#   RÉCUPÉRATION DES DONNÉES MÉTÉO DES DERNIÈRES 6 HEURES HISTORIQUES
 # ============================================================================
 
-def fetch_6h_weather_forecast():
+### UPDATED: Changed to fetch LAST 6h historical (not forecast)
+def fetch_last_6h_historical_weather():
     """
-    Récupère les 6 prochaines heures de données météo depuis la base.
+    Récupère les dernières 6h de données météo HISTORIQUES depuis la base.
     
     Retourne un DataFrame avec les colonnes nécessaires pour la génération.
     """
     print("\n" + "=" * 80)
-    print("📡 RÉCUPÉRATION DES PRÉVISIONS MÉTÉO (6 HEURES)")
+    print("📡 RÉCUPÉRATION DES DONNÉES MÉTÉO HISTORIQUES (DERNIÈRES 6 HEURES)")
     print("=" * 80)
     
     conn = get_db_connection()
@@ -97,7 +97,7 @@ def fetch_6h_weather_forecast():
     
     try:
         now = datetime.now()
-        forecast_end = now + timedelta(hours=6)
+        start_time = now - timedelta(hours=6)
         
         query = """
         SELECT 
@@ -108,17 +108,17 @@ def fetch_6h_weather_forecast():
             solar_radiation_w_m2
         FROM weather_forecast_hourly
         WHERE forecast_timestamp >= %s
-          AND forecast_timestamp < %s
+          AND forecast_timestamp <= %s
         ORDER BY forecast_timestamp
         """
         
-        print(f"🔍 Récupération des données de {now} à {forecast_end}")
-        cur.execute(query, (now, forecast_end))
+        print(f"🔍 Récupération des données historiques de {start_time} à {now}")
+        cur.execute(query, (start_time, now))
         rows = cur.fetchall()
         
         if not rows:
-            print("❌ Aucune donnée météo trouvée pour les 6 prochaines heures!")
-            print("⚠️  Exécutez d'abord le script weather_forecasting.py")
+            print("❌ Aucune donnée météo historique trouvée pour les dernières 6h!")
+            print("⚠️  Assurez-vous que le backfill météo a été exécuté d'abord")
             return None
         
         # Créer le DataFrame
@@ -136,14 +136,14 @@ def fetch_6h_weather_forecast():
         df['Cloud Cover (%)'] = df['Cloud Cover (%)'].astype(float)
         df['Solar Radiation (W/m²)'] = df['Solar Radiation (W/m²)'].astype(float)
 
-        print(f"✅ {len(df)} heures de prévisions météo récupérées")
+        print(f"✅ {len(df)} heures de données historiques récupérées")
         print(f"📅 Période: {df['Time'].min()} → {df['Time'].max()}")
         print(f"🌡️  Température: min={df['Outdoor Temp (°C)'].min():.1f}°C, max={df['Outdoor Temp (°C)'].max():.1f}°C")
         
         return df
         
     except Exception as e:
-        print(f"❌ Erreur lors de la récupération des prévisions: {e}")
+        print(f"❌ Erreur lors de la récupération: {e}")
         raise
     finally:
         cur.close()
@@ -472,12 +472,13 @@ def generate_realistic_equipment(df, building_type, building_modernity, occupanc
 
 
 # ============================================================================
-#   GÉNÉRATION POUR UN BÂTIMENT (6H SEULEMENT)
+#   GÉNÉRATION POUR UN BÂTIMENT (6H HISTORIQUE SEULEMENT)
 # ============================================================================
 
-def generate_building_6h_forecast(weather_df, building_type, building_number, last_state=None):
+### UPDATED: Renamed and adjusted for historical
+def generate_building_last_6h_backfill(weather_df, building_type, building_number, last_state=None):
     """
-    Generate 6-hour forecast for one building using weather forecast data
+    Generate last 6h historical backfill for one building using historical weather data
     """
 
     np.random.seed(42 + building_number)
@@ -549,22 +550,23 @@ def generate_building_6h_forecast(weather_df, building_type, building_number, la
 #   FONCTION PRINCIPALE
 # ============================================================================
 
-def generate_6h_energy_forecast():
+### UPDATED: Renamed to backfill_last_6h_energy
+def backfill_last_6h_energy():
     """
-    🔥 FONCTION PRINCIPALE
+    🔄 FONCTION PRINCIPALE
     
-    Génère les données d'énergie synthétiques pour les 6 prochaines heures
+    Génère les données d'énergie synthétiques pour les dernières 6h HISTORIQUES
     et les charge dans la DB (UPSERT).
     """
     print("=" * 80)
-    print("🔮 GÉNÉRATION DES PRÉVISIONS ÉNERGÉTIQUES (6 HEURES)")
+    print("🔄 BACKFILL ÉNERGÉTIQUE HISTORIQUE (DERNIÈRES 6 HEURES)")
     print("=" * 80)
 
-    # 1) Récupérer les prévisions météo des 6 prochaines heures
-    weather_df = fetch_6h_weather_forecast()
+    # 1) Récupérer les données météo historiques des dernières 6h
+    weather_df = fetch_last_6h_historical_weather()
     
     if weather_df is None or weather_df.empty:
-        print("❌ Impossible de générer les prévisions sans données météo")
+        print("❌ Impossible de générer sans données météo historiques")
         return
 
     total_buildings = 0
@@ -572,7 +574,7 @@ def generate_6h_energy_forecast():
 
     # 2) Générer les données pour chaque bâtiment
     for building_type, count in building_counts.items():
-        print(f"\n📊 Génération de {count} {building_type}(s):")
+        print(f"\n📊 Backfill de {count} {building_type}(s):")
 
         for i in range(1, count + 1):
             if count == 1:
@@ -583,7 +585,7 @@ def generate_6h_energy_forecast():
             # Récupérer le dernier état connu pour assurer la continuité
             last_state = get_last_occupancy_state(building_name)
             
-            df = generate_building_6h_forecast(
+            df = generate_building_last_6h_backfill(
                 weather_df, building_type, total_buildings + i, last_state
             )
 
@@ -596,7 +598,7 @@ def generate_6h_energy_forecast():
         total_buildings += count
 
     # 3) Combiner et charger dans la DB
-    print("\n📦 Préparation du chargement en DB...")
+    print("\n📦 Préparation du backfill en DB...")
     combined_df = pd.concat(all_buildings_data, ignore_index=True)
 
     cols = combined_df.columns.tolist()
@@ -608,11 +610,11 @@ def generate_6h_energy_forecast():
     upsert_energy_consumption_to_db(combined_df)
 
     print("\n" + "=" * 80)
-    print("✅ SUCCÈS! Prévisions énergétiques (6h) générées et chargées")
+    print("✅ SUCCÈS! Backfill énergétique historique (6h) généré et chargé")
     print(f"📊 Total: {len(combined_df):,} lignes")
     print(f"📅 Période: {combined_df['Time'].min()} → {combined_df['Time'].max()}")
     print("=" * 80)
 
 
 if __name__ == "__main__":
-    generate_6h_energy_forecast()
+    backfill_last_6h_energy()

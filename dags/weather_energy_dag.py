@@ -1,5 +1,6 @@
 from datetime import datetime, timedelta
 import psycopg2
+import os  # For bash args
 
 from airflow import DAG
 from airflow.operators.bash import BashOperator
@@ -7,28 +8,23 @@ from airflow.operators.python import BranchPythonOperator
 from airflow.operators.empty import EmptyOperator
 
 # ============================================================================
-#   DAG AIRFLOW UNIFIÉ - MÉTÉO + ÉNERGIE (INITIAL + FORECAST 6H)
+#   DAG AIRFLOW UNIFIÉ - MÉTÉO + ÉNERGIE (HISTORICAL ONLY, NO FUTURE ENERGY)
 # ============================================================================
 # 
-# 🎯 CE DAG GÈRE AUTOMATIQUEMENT:
+# 🎯 CE DAG GÈRE:
 # 
-# 1️⃣ PREMIÈRE EXÉCUTION (Initial Load):
-#    - Détecte automatiquement si la DB est vide
-#    - Charge l'historique complet (1/1/2024 → aujourd'hui)
-#    - Génère les données énergétiques historiques
-#    - Crée les prévisions initiales (6h)
+# 1️⃣ INITIAL/BACKFILL (Gaps detected):
+#    - Full historical weather (2024-01-01 → NOW) + 1-week forecast
+#    - Full historical energy gen (using historical weather)
 # 
-# 2️⃣ EXÉCUTIONS SUIVANTES (Regular Updates):
-#    - Backfill des anciennes prévisions avec données réelles
-#    - Récupère les 6 prochaines heures de prévisions
-#    - Génère les données énergétiques pour les 6h
-#    - S'exécute automatiquement toutes les 6h
+# 2️⃣ REGULAR (Recent only, every 6h):
+#    - Backfill last 6h weather with archive (replace old forecasts)
+#    - Gen energy ONLY for last 6h historical (no future)
 # 
 # ✅ Avantages:
-#    - Vérification directe dans la DB (pas de variable Airflow)
-#    - Un seul DAG à gérer
-#    - Logique intelligente et robuste
-#    - Réinitialisation automatique si DB vidée
+#    - Gap-aware DB check (up to NOW - 6h)
+#    - No future energy (historical only)
+#    - Efficient regular runs
 # ============================================================================
 
 def get_db_connection():
@@ -44,68 +40,65 @@ def get_db_connection():
         sslmode=os.getenv("GAUSSDB_SSLMODE", "disable")
     )
 
-
 def check_database_initialization(**context):
     """
-    Vérifie si des données existent déjà dans la base de données.
-    
-    Critères pour considérer le système comme "initialisé":
-    - weather_forecast_hourly contient des données >= 2024-01-01
-    - energy_consumption_hourly contient des données >= 2024-01-01
+    Vérifie la couverture des données de 2024-01-01 à NOW() - 6h.
     
     Returns:
-        str: 'initial_load' si DB vide, 'regular_update' si déjà des données
+        str: 'initial_backfill' si gaps/missing; 'regular_recent' si couvert.
     """
     conn = None
     try:
         conn = get_db_connection()
         cur = conn.cursor()
         
-        # Vérifier la météo historique
+        now_minus_6h = datetime.now() - timedelta(hours=6)
+        start_date = datetime(2024, 1, 1)
+        
+        # Vérifier météo: count depuis start à now-6h
         cur.execute("""
             SELECT COUNT(*) 
             FROM weather_forecast_hourly 
-            WHERE forecast_timestamp >= '2024-01-01 00:00:00'
-        """)
+            WHERE forecast_timestamp >= %s AND forecast_timestamp <= %s
+        """, (start_date, now_minus_6h))
         weather_count = cur.fetchone()[0]
         
-        # Vérifier l'énergie historique
+        # Expected hours: ~ (now_minus_6h - start_date).total_seconds() / 3600
+        expected_hours = int((now_minus_6h - start_date).total_seconds() / 3600)
+        
+        # Vérifier énergie
         cur.execute("""
             SELECT COUNT(*) 
             FROM energy_consumption_hourly 
-            WHERE time_ts >= '2024-01-01 00:00:00'
-        """)
+            WHERE time_ts >= %s AND time_ts <= %s
+        """, (start_date, now_minus_6h))
         energy_count = cur.fetchone()[0]
         
         print("=" * 80)
-        print("🔍 VÉRIFICATION DE L'INITIALISATION DE LA BASE DE DONNÉES")
+        print("🔍 VÉRIFICATION COUVERTURE (2024-01-01 → NOW-6h)")
         print("=" * 80)
-        print(f"📊 Données météo depuis 2024-01-01: {weather_count:,} lignes")
-        print(f"⚡ Données énergie depuis 2024-01-01: {energy_count:,} lignes")
+        print(f"📅 Période: {start_date} → {now_minus_6h} (~{expected_hours:,} heures attendues)")
+        print(f"📊 Données météo: {weather_count:,} lignes")
+        print(f"⚡ Données énergie: {energy_count:,} lignes")
         print("=" * 80)
         
-        # Critère: au moins 1000 lignes de météo ET 10000 lignes d'énergie
-        # (correspond à ~42 jours de données minimales)
-        if weather_count >= 1000 and energy_count >= 10000:
-            print("✅ Base de données déjà initialisée → Mode REGULAR UPDATE (6h)")
+        # Critère: >=95% coverage (tolérance pour petits gaps)
+        coverage_pct = (min(weather_count, energy_count) / max(expected_hours, 1)) * 100
+        if coverage_pct < 95:
+            print("🚀 Gaps détectés → Mode INITIAL/BACKFILL (full)")
             print("=" * 80)
-            return "regular_update"
+            return "initial_backfill"
         else:
-            print("🚀 Base de données vide ou incomplète → Mode INITIAL LOAD")
+            print("✅ Couverture OK → Mode REGULAR (last 6h only)")
             print("=" * 80)
-            return "initial_load"
+            return "regular_recent"
             
     except Exception as e:
-        print("=" * 80)
-        print(f"⚠️  Erreur lors de la vérification de la DB: {e}")
-        print("🚀 Par défaut → Mode INITIAL LOAD")
-        print("=" * 80)
-        return "initial_load"
-        
+        print(f"⚠️ Erreur DB check: {e} → Default to full backfill")
+        return "initial_backfill"
     finally:
         if conn:
             conn.close()
-
 
 default_args = {
     "owner": "hamza",
@@ -117,220 +110,99 @@ default_args = {
 }
 
 with DAG(
-    dag_id="unified_weather_energy_pipeline",
-    description="🔄 Pipeline unifié: Initial Load + Updates 6h automatiques (DB Check)",
+    dag_id="unified_weather_energy_historical_pipeline",
+    description="🔄 Pipeline unifié: Historical only (backfill gaps + recent 6h, NO future energy)",
     default_args=default_args,
     start_date=datetime(2025, 11, 11),
-    schedule_interval="0 */6 * * *",         # Toutes les 6h: 00:00, 06:00, 12:00, 18:00
+    schedule_interval="0 */6 * * *",  # Every 6h
     catchup=False,
     max_active_runs=1,
-    tags=["renewstation", "unified", "weather", "energy", "auto"],
+    tags=["renewstation", "historical", "no_forecast_energy", "backfill"],
 ) as dag:
 
     # ========================================================================
-    #   BRANCHEMENT INTELLIGENT: INITIAL vs REGULAR (VÉRIFICATION DB)
+    #   BRANCHEMENT: FULL BACKFILL vs RECENT 6H
     # ========================================================================
     
     check_mode = BranchPythonOperator(
-        task_id="check_database_status",
+        task_id="check_database_coverage",
         python_callable=check_database_initialization,
         provide_context=True,
-        doc_md="""
-        ### 🔍 Détection automatique du mode d'exécution
-        
-        **Vérifie directement dans la base de données:**
-        
-        - **Query 1:** `SELECT COUNT(*) FROM weather_forecast_hourly WHERE forecast_timestamp >= '2024-01-01'`
-        - **Query 2:** `SELECT COUNT(*) FROM energy_consumption_hourly WHERE time_ts >= '2024-01-01'`
-        
-        **Critères:**
-        - Météo >= 1000 lignes ET Énergie >= 10000 lignes → **REGULAR UPDATE**
-        - Sinon → **INITIAL LOAD**
-        
-        **Avantages:**
-        - Pas de dépendance à une variable Airflow
-        - Vérification robuste de l'état réel
-        - Réinitialisation automatique si DB vidée
-        """,
     )
 
     # ========================================================================
-    #   BRANCHE 1: INITIAL LOAD (Première exécution ou DB vide)
+    #   BRANCHE 1: INITIAL/BACKFILL (Gaps/First Run)
     # ========================================================================
     
-    initial_load = EmptyOperator(
-        task_id="initial_load",
-        doc_md="🚀 **Mode: Initial Load** - Chargement historique complet",
-    )
+    initial_backfill = EmptyOperator(task_id="initial_backfill")
     
-    # --- Historique Météo Complet ---
-    initial_weather_history = BashOperator(
-        task_id="initial_weather_history",
+    # Full historical weather (2024-01-01 → NOW) + 1-week forecast
+    full_weather_backfill = BashOperator(
+        task_id="full_weather_backfill",
         bash_command=(
             "cd /opt/airflow && "
             "PYTHONPATH=/opt/airflow "
-            "python -m src.pipeline.generator.weather_forecasting"
+            "python -m src.pipeline.generator.weather_forecasting --mode full"
         ),
         execution_timeout=timedelta(minutes=30),
-        doc_md="""
-        ### 📚 Chargement historique météo (1/1/2024 → aujourd'hui)
-        
-        - **Source:** Open-Meteo Archive API
-        - **Durée estimée:** 10-20 minutes
-        - **Volume:** ~7500+ heures (selon date actuelle)
-        - **Insertion:** UPSERT pour éviter les doublons
-        """,
     )
     
-    # --- Historique Énergie Complet ---
-    initial_energy_history = BashOperator(
-        task_id="initial_energy_history",
+    # Full historical energy (using backfilled weather)
+    full_energy_backfill = BashOperator(
+        task_id="full_energy_backfill",
         bash_command=(
             "cd /opt/airflow && "
             "PYTHONPATH=/opt/airflow "
-            "python -m src.pipeline.generator.energy_cons_generator"
+            "python -m src.pipeline.generator.energy_cons_generator --mode full"
         ),
         execution_timeout=timedelta(minutes=45),
-        doc_md="""
-        ### ⚡ Génération historique énergie (1/1/2024 → aujourd'hui)
-        
-        - **Corrélations:** météo réelle + patterns d'occupation
-        - **Durée estimée:** 20-30 minutes
-        - **Volume:** ~180,000+ lignes (24 bâtiments × 7500+ heures)
-        - **Insertion:** UPSERT pour éviter les doublons
-        """,
-    )
-    
-    # --- Prévisions Météo Initiales (6h) ---
-    initial_weather_forecast = BashOperator(
-        task_id="initial_weather_forecast_6h",
-        bash_command=(
-            "cd /opt/airflow && "
-            "PYTHONPATH=/opt/airflow "
-            "python -m src.pipeline.generator.weather_forecasting"
-        ),
-        execution_timeout=timedelta(minutes=10),
-        doc_md="""
-        ### 🔮 Prévisions météo initiales (6h)
-        
-        - **Source:** Open-Meteo Forecast API
-        - **Volume:** 6 heures de prévisions
-        - **Insertion:** UPSERT
-        """,
-    )
-    
-    # --- Prévisions Énergie Initiales (6h) ---
-    initial_energy_forecast = BashOperator(
-        task_id="initial_energy_forecast_6h",
-        bash_command=(
-            "cd /opt/airflow && "
-            "PYTHONPATH=/opt/airflow "
-            "python -m src.pipeline.generator.generate_energy_6h_forecast"
-        ),
-        execution_timeout=timedelta(minutes=15),
-        doc_md="""
-        ### ⚡ Prévisions énergie initiales (6h)
-        
-        - **Volume:** ~144 lignes (24 bâtiments × 6 heures)
-        - **Insertion:** UPSERT
-        """,
     )
 
     # ========================================================================
-    #   BRANCHE 2: REGULAR UPDATE (Exécutions suivantes - toutes les 6h)
+    #   BRANCHE 2: REGULAR RECENT (Every 6h, Last 6h Only)
     # ========================================================================
     
-    regular_update = EmptyOperator(
-        task_id="regular_update",
-        doc_md="🔄 **Mode: Regular Update** - Mise à jour 6h",
-    )
+    regular_recent = EmptyOperator(task_id="regular_recent")
     
-    # --- Météo: Backfill + Forecast 6h ---
-    regular_weather_update = BashOperator(
-        task_id="regular_weather_update_6h",
+    # Backfill last 6h weather with archive (no full fetch)
+    recent_weather_backfill = BashOperator(
+        task_id="recent_weather_backfill_6h",
         bash_command=(
             "cd /opt/airflow && "
             "PYTHONPATH=/opt/airflow "
-            "python -m src.pipeline.generator.weather_forecasting"
+            "python -m src.pipeline.generator.weather_forecasting --mode recent"
+        ),
+        execution_timeout=timedelta(minutes=5),
+    )
+    
+    # Gen energy ONLY for last 6h historical (repurposed script)
+    recent_energy_backfill = BashOperator(
+        task_id="recent_energy_backfill_6h",
+        bash_command=(
+            "cd /opt/airflow && "
+            "PYTHONPATH=/opt/airflow "
+            "python -m src.pipeline.generator.backfill_energy_last_6h"  # Repurposed from generate_energy_6h.py
         ),
         execution_timeout=timedelta(minutes=10),
-        doc_md="""
-        ### 📡 Mise à jour météo (backfill + 6h forecast)
-        
-        **Étapes:**
-        1. **Backfill:** Remplace anciennes prévisions par données réelles
-        2. **Forecast:** Récupère 6 prochaines heures
-        3. **UPSERT:** Pas de duplication
-        
-        **Durée:** ~2-5 minutes
-        """,
-    )
-    
-    # --- Énergie: Génération 6h ---
-    regular_energy_update = BashOperator(
-        task_id="regular_energy_update_6h",
-        bash_command=(
-            "cd /opt/airflow && "
-            "PYTHONPATH=/opt/airflow "
-            "python -m src.pipeline.generator.generate_energy_6h_forecast"
-        ),
-        execution_timeout=timedelta(minutes=15),
-        doc_md="""
-        ### ⚡ Génération énergie (6h forecast)
-        
-        **Étapes:**
-        1. Lit les 6h de météo depuis weather_forecast_hourly
-        2. Génère données énergétiques synthétiques corrélées
-        3. UPSERT dans energy_consumption_hourly
-        
-        **Durée:** ~3-5 minutes
-        """,
     )
 
     # ========================================================================
-    #   CONVERGENCE: Les deux branches rejoignent ici
+    #   CONVERGENCE
     # ========================================================================
     
     pipeline_complete = EmptyOperator(
         task_id="pipeline_complete",
         trigger_rule="none_failed_min_one_success",
-        doc_md="""
-        ### ✅ Pipeline terminé avec succès
-        
-        Le pipeline s'est terminé avec succès.
-        
-        **Prochaine exécution:** Dans 6 heures (automatique)
-        
-        **Vérifications suggérées:**
-        ```sql
-        -- Météo
-        SELECT COUNT(*), MIN(forecast_timestamp), MAX(forecast_timestamp)
-        FROM weather_forecast_hourly;
-        
-        -- Énergie
-        SELECT COUNT(*), COUNT(DISTINCT building), MIN(time_ts), MAX(time_ts)
-        FROM energy_consumption_hourly;
-        ```
-        """,
     )
 
     # ========================================================================
-    #   DÉFINITION DES DÉPENDANCES
+    #   DÉPENDANCES
     # ========================================================================
     
-    # Branchement initial (vérification DB)
-    check_mode >> [initial_load, regular_update]
+    check_mode >> [initial_backfill, regular_recent]
     
-    # --- BRANCHE INITIAL LOAD ---
-    initial_load >> initial_weather_history
-    initial_weather_history >> initial_energy_history
-    initial_energy_history >> initial_weather_forecast
-    initial_weather_forecast >> initial_energy_forecast
-    initial_energy_forecast >> pipeline_complete
+    # Initial/Backfill
+    initial_backfill >> full_weather_backfill >> full_energy_backfill >> pipeline_complete
     
-    # --- BRANCHE REGULAR UPDATE ---
-    regular_update >> regular_weather_update
-    regular_weather_update >> regular_energy_update
-    regular_energy_update >> pipeline_complete
-
-
+    # Regular Recent
+    regular_recent >> recent_weather_backfill >> recent_energy_backfill >> pipeline_complete
