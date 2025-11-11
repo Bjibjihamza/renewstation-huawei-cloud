@@ -2603,3 +2603,45 @@
 [2025-11-11T21:37:31.818+0000] {logging_mixin.py:190} INFO - [2025-11-11T21:37:31.818+0000] {dag.py:3239} INFO - Sync 1 DAGs
 [2025-11-11T21:37:31.897+0000] {logging_mixin.py:190} INFO - [2025-11-11T21:37:31.896+0000] {dag.py:4180} INFO - Setting next_dagrun for unified_weather_energy_historical_pipeline to 2025-11-11 18:00:00+00:00, run_after=2025-11-12 00:00:00+00:00
 [2025-11-11T21:37:31.955+0000] {processor.py:208} INFO - Processing /opt/airflow/dags/weather_energy_dag.py took 0.270 seconds
+[2025-11-11T21:40:29.008+0000] {processor.py:186} INFO - Started process (PID=4052) to work on /opt/airflow/dags/weather_energy_dag.py
+[2025-11-11T21:40:29.009+0000] {processor.py:914} INFO - Processing file /opt/airflow/dags/weather_energy_dag.py for tasks to queue
+[2025-11-11T21:40:29.011+0000] {logging_mixin.py:190} INFO - [2025-11-11T21:40:29.011+0000] {dagbag.py:588} INFO - Filling up the DagBag from /opt/airflow/dags/weather_energy_dag.py
+[2025-11-11T21:40:29.059+0000] {processor.py:925} INFO - DAG(s) 'unified_weather_energy_historical_pipeline' retrieved from /opt/airflow/dags/weather_energy_dag.py
+[2025-11-11T21:40:29.384+0000] {logging_mixin.py:190} INFO - [2025-11-11T21:40:29.383+0000] {dag.py:3239} INFO - Sync 1 DAGs
+[2025-11-11T21:40:29.454+0000] {logging_mixin.py:190} INFO - [2025-11-11T21:40:29.453+0000] {dag.py:4180} INFO - Setting next_dagrun for unified_weather_energy_historical_pipeline to 2025-11-11 18:00:00+00:00, run_after=2025-11-12 00:00:00+00:00
+[2025-11-11T21:40:29.525+0000] {processor.py:208} INFO - Processing /opt/airflow/dags/weather_energy_dag.py took 0.525 seconds
+[2025-11-11T21:40:59.906+0000] {processor.py:186} INFO - Started process (PID=4065) to work on /opt/airflow/dags/weather_energy_dag.py
+[2025-11-11T21:40:59.907+0000] {processor.py:914} INFO - Processing file /opt/airflow/dags/weather_energy_dag.py for tasks to queue
+[2025-11-11T21:40:59.909+0000] {logging_mixin.py:190} INFO - [2025-11-11T21:40:59.909+0000] {dagbag.py:588} INFO - Filling up the DagBag from /opt/airflow/dags/weather_energy_dag.py
+[2025-11-11T21:40:59.946+0000] {processor.py:925} INFO - DAG(s) 'unified_weather_energy_historical_pipeline' retrieved from /opt/airflow/dags/weather_energy_dag.py
+[2025-11-11T21:40:59.986+0000] {logging_mixin.py:190} INFO - [2025-11-11T21:40:59.985+0000] {dag.py:3239} INFO - Sync 1 DAGs
+[2025-11-11T21:41:00.023+0000] {logging_mixin.py:190} INFO - [2025-11-11T21:41:00.023+0000] {dag.py:4180} INFO - Setting next_dagrun for unified_weather_energy_historical_pipeline to 2025-11-11 18:00:00+00:00, run_after=2025-11-12 00:00:00+00:00
+[2025-11-11T21:41:00.046+0000] {processor.py:208} INFO - Processing /opt/airflow/dags/weather_energy_dag.py took 0.149 seconds
+[2025-11-11T21:41:30.142+0000] {processor.py:186} INFO - Started process (PID=4078) to work on /opt/airflow/dags/weather_energy_dag.py
+[2025-11-11T21:41:30.147+0000] {processor.py:914} INFO - Processing file /opt/airflow/dags/weather_energy_dag.py for tasks to queue
+[2025-11-11T21:41:30.156+0000] {logging_mixin.py:190} INFO - [2025-11-11T21:41:30.155+0000] {dagbag.py:588} INFO - Filling up the DagBag from /opt/airflow/dags/weather_energy_dag.py
+[2025-11-11T21:41:30.231+0000] {processor.py:925} INFO - DAG(s) 'unified_weather_energy_historical_pipeline' retrieved from /opt/airflow/dags/weather_energy_dag.py
+[2025-11-11T21:41:30.375+0000] {logging_mixin.py:190} INFO - [2025-11-11T21:41:30.374+0000] {dag.py:3239} INFO - Sync 1 DAGs
+[2025-11-11T21:41:30.473+0000] {logging_mixin.py:190} INFO - [2025-11-11T21:41:30.473+0000] {dag.py:4180} INFO - Setting next_dagrun for unified_weather_energy_historical_pipeline to 2025-11-11 18:00:00+00:00, run_after=2025-11-12 00:00:00+00:00
+[2025-11-11T21:41:30.559+0000] {processor.py:208} INFO - Processing /opt/airflow/dags/weather_energy_dag.py took 0.427 seconds
+[2025-11-11T21:42:00.806+0000] {processor.py:186} INFO - Started process (PID=4091) to work on /opt/airflow/dags/weather_energy_dag.py
+[2025-11-11T21:42:00.807+0000] {processor.py:914} INFO - Processing file /opt/airflow/dags/weather_energy_dag.py for tasks to queue
+[2025-11-11T21:42:00.809+0000] {logging_mixin.py:190} INFO - [2025-11-11T21:42:00.808+0000] {dagbag.py:588} INFO - Filling up the DagBag from /opt/airflow/dags/weather_energy_dag.py
+[2025-11-11T21:42:00.836+0000] {processor.py:925} INFO - DAG(s) 'unified_weather_energy_historical_pipeline' retrieved from /opt/airflow/dags/weather_energy_dag.py
+[2025-11-11T21:42:00.878+0000] {logging_mixin.py:190} INFO - [2025-11-11T21:42:00.878+0000] {dag.py:3239} INFO - Sync 1 DAGs
+[2025-11-11T21:42:00.910+0000] {logging_mixin.py:190} INFO - [2025-11-11T21:42:00.910+0000] {dag.py:4180} INFO - Setting next_dagrun for unified_weather_energy_historical_pipeline to 2025-11-11 18:00:00+00:00, run_after=2025-11-12 00:00:00+00:00
+[2025-11-11T21:42:00.943+0000] {processor.py:208} INFO - Processing /opt/airflow/dags/weather_energy_dag.py took 0.145 seconds
+[2025-11-11T21:42:31.004+0000] {processor.py:186} INFO - Started process (PID=4096) to work on /opt/airflow/dags/weather_energy_dag.py
+[2025-11-11T21:42:31.005+0000] {processor.py:914} INFO - Processing file /opt/airflow/dags/weather_energy_dag.py for tasks to queue
+[2025-11-11T21:42:31.006+0000] {logging_mixin.py:190} INFO - [2025-11-11T21:42:31.006+0000] {dagbag.py:588} INFO - Filling up the DagBag from /opt/airflow/dags/weather_energy_dag.py
+[2025-11-11T21:42:31.030+0000] {processor.py:925} INFO - DAG(s) 'unified_weather_energy_historical_pipeline' retrieved from /opt/airflow/dags/weather_energy_dag.py
+[2025-11-11T21:42:31.067+0000] {logging_mixin.py:190} INFO - [2025-11-11T21:42:31.067+0000] {dag.py:3239} INFO - Sync 1 DAGs
+[2025-11-11T21:42:31.101+0000] {logging_mixin.py:190} INFO - [2025-11-11T21:42:31.101+0000] {dag.py:4180} INFO - Setting next_dagrun for unified_weather_energy_historical_pipeline to 2025-11-11 18:00:00+00:00, run_after=2025-11-12 00:00:00+00:00
+[2025-11-11T21:42:31.123+0000] {processor.py:208} INFO - Processing /opt/airflow/dags/weather_energy_dag.py took 0.127 seconds
+[2025-11-11T21:43:01.279+0000] {processor.py:186} INFO - Started process (PID=4109) to work on /opt/airflow/dags/weather_energy_dag.py
+[2025-11-11T21:43:01.280+0000] {processor.py:914} INFO - Processing file /opt/airflow/dags/weather_energy_dag.py for tasks to queue
+[2025-11-11T21:43:01.282+0000] {logging_mixin.py:190} INFO - [2025-11-11T21:43:01.282+0000] {dagbag.py:588} INFO - Filling up the DagBag from /opt/airflow/dags/weather_energy_dag.py
+[2025-11-11T21:43:01.311+0000] {processor.py:925} INFO - DAG(s) 'unified_weather_energy_historical_pipeline' retrieved from /opt/airflow/dags/weather_energy_dag.py
+[2025-11-11T21:43:01.357+0000] {logging_mixin.py:190} INFO - [2025-11-11T21:43:01.356+0000] {dag.py:3239} INFO - Sync 1 DAGs
+[2025-11-11T21:43:01.385+0000] {logging_mixin.py:190} INFO - [2025-11-11T21:43:01.385+0000] {dag.py:4180} INFO - Setting next_dagrun for unified_weather_energy_historical_pipeline to 2025-11-11 18:00:00+00:00, run_after=2025-11-12 00:00:00+00:00
+[2025-11-11T21:43:01.404+0000] {processor.py:208} INFO - Processing /opt/airflow/dags/weather_energy_dag.py took 0.131 seconds
