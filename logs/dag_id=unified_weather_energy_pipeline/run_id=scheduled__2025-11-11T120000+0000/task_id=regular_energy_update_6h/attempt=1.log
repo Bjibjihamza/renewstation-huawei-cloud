@@ -1,0 +1,85 @@
+[2025-11-11T19:05:50.000+0000] {local_task_job_runner.py:123} INFO - ::group::Pre task execution logs
+[2025-11-11T19:05:50.048+0000] {taskinstance.py:2612} INFO - Dependencies all met for dep_context=non-requeueable deps ti=<TaskInstance: unified_weather_energy_pipeline.regular_energy_update_6h scheduled__2025-11-11T12:00:00+00:00 [queued]>
+[2025-11-11T19:05:50.066+0000] {taskinstance.py:2612} INFO - Dependencies all met for dep_context=requeueable deps ti=<TaskInstance: unified_weather_energy_pipeline.regular_energy_update_6h scheduled__2025-11-11T12:00:00+00:00 [queued]>
+[2025-11-11T19:05:50.068+0000] {taskinstance.py:2865} INFO - Starting attempt 1 of 3
+[2025-11-11T19:05:50.093+0000] {taskinstance.py:2888} INFO - Executing <Task(BashOperator): regular_energy_update_6h> on 2025-11-11 12:00:00+00:00
+[2025-11-11T19:05:50.105+0000] {standard_task_runner.py:104} INFO - Running: ['airflow', 'tasks', 'run', 'unified_weather_energy_pipeline', 'regular_energy_update_6h', 'scheduled__2025-11-11T12:00:00+00:00', '--job-id', '19', '--raw', '--subdir', 'DAGS_FOLDER/weather_energy_dag.py', '--cfg-path', '/tmp/tmp78i_pxn7']
+[2025-11-11T19:05:50.109+0000] {standard_task_runner.py:105} INFO - Job 19: Subtask regular_energy_update_6h
+[2025-11-11T19:05:50.110+0000] {logging_mixin.py:190} WARNING - /home/airflow/.local/lib/python3.12/site-packages/airflow/task/task_runner/standard_task_runner.py:70 DeprecationWarning: This process (pid=188) is multi-threaded, use of fork() may lead to deadlocks in the child.
+[2025-11-11T19:05:50.110+0000] {standard_task_runner.py:72} INFO - Started process 189 to run task
+[2025-11-11T19:05:50.171+0000] {task_command.py:467} INFO - Running <TaskInstance: unified_weather_energy_pipeline.regular_energy_update_6h scheduled__2025-11-11T12:00:00+00:00 [running]> on host 3962d829321f
+[2025-11-11T19:05:50.269+0000] {taskinstance.py:3131} INFO - Exporting env vars: AIRFLOW_CTX_DAG_OWNER='hamza' AIRFLOW_CTX_DAG_ID='unified_weather_energy_pipeline' AIRFLOW_CTX_TASK_ID='regular_energy_update_6h' AIRFLOW_CTX_EXECUTION_DATE='2025-11-11T12:00:00+00:00' AIRFLOW_CTX_TRY_NUMBER='1' AIRFLOW_CTX_DAG_RUN_ID='scheduled__2025-11-11T12:00:00+00:00'
+[2025-11-11T19:05:50.271+0000] {taskinstance.py:731} INFO - ::endgroup::
+[2025-11-11T19:05:50.285+0000] {subprocess.py:63} INFO - Tmp dir root location: /tmp
+[2025-11-11T19:05:50.287+0000] {subprocess.py:75} INFO - Running command: ['/usr/bin/bash', '-c', 'cd /opt/airflow && PYTHONPATH=/opt/airflow python -m src.pipeline.generator.generate_energy_6h_forecast']
+[2025-11-11T19:05:50.297+0000] {subprocess.py:86} INFO - Output:
+[2025-11-11T19:05:52.351+0000] {subprocess.py:93} INFO - ================================================================================
+[2025-11-11T19:05:52.352+0000] {subprocess.py:93} INFO - 🔮 GÉNÉRATION DES PRÉVISIONS ÉNERGÉTIQUES (6 HEURES)
+[2025-11-11T19:05:52.352+0000] {subprocess.py:93} INFO - ================================================================================
+[2025-11-11T19:05:52.353+0000] {subprocess.py:93} INFO - 
+[2025-11-11T19:05:52.353+0000] {subprocess.py:93} INFO - ================================================================================
+[2025-11-11T19:05:52.354+0000] {subprocess.py:93} INFO - 📡 RÉCUPÉRATION DES PRÉVISIONS MÉTÉO (6 HEURES)
+[2025-11-11T19:05:52.354+0000] {subprocess.py:93} INFO - ================================================================================
+[2025-11-11T19:05:52.355+0000] {subprocess.py:93} INFO - 🔍 Récupération des données de 2025-11-11 19:05:51.675465 à 2025-11-12 01:05:51.675465
+[2025-11-11T19:05:52.355+0000] {subprocess.py:93} INFO - ✅ 4 heures de prévisions météo récupérées
+[2025-11-11T19:05:52.356+0000] {subprocess.py:93} INFO - 📅 Période: 2025-11-11 20:00:00 → 2025-11-11 23:00:00
+[2025-11-11T19:05:52.359+0000] {subprocess.py:93} INFO - 🌡️  Température: min=17.4°C, max=18.9°C
+[2025-11-11T19:05:52.362+0000] {subprocess.py:93} INFO - 
+[2025-11-11T19:05:52.363+0000] {subprocess.py:93} INFO - 📊 Génération de 1 Hospital(s):
+[2025-11-11T19:05:52.364+0000] {subprocess.py:93} INFO -   ✓ Hospital                  | Avg Load:   11.52 kW
+[2025-11-11T19:05:52.364+0000] {subprocess.py:93} INFO - 
+[2025-11-11T19:05:52.365+0000] {subprocess.py:93} INFO - 📊 Génération de 15 House(s):
+[2025-11-11T19:05:52.365+0000] {subprocess.py:93} INFO -   ✓ House1                    | Avg Load:    1.12 kW
+[2025-11-11T19:05:52.366+0000] {subprocess.py:93} INFO -   ✓ House2                    | Avg Load:    1.35 kW
+[2025-11-11T19:05:52.367+0000] {subprocess.py:93} INFO -   ✓ House3                    | Avg Load:    1.28 kW
+[2025-11-11T19:05:52.368+0000] {subprocess.py:93} INFO -   ✓ House4                    | Avg Load:    1.02 kW
+[2025-11-11T19:05:52.369+0000] {subprocess.py:93} INFO -   ✓ House5                    | Avg Load:    0.84 kW
+[2025-11-11T19:05:52.369+0000] {subprocess.py:93} INFO -   ✓ House6                    | Avg Load:    1.02 kW
+[2025-11-11T19:05:52.370+0000] {subprocess.py:93} INFO -   ✓ House7                    | Avg Load:    0.94 kW
+[2025-11-11T19:05:52.370+0000] {subprocess.py:93} INFO -   ✓ House8                    | Avg Load:    1.19 kW
+[2025-11-11T19:05:52.371+0000] {subprocess.py:93} INFO -   ✓ House9                    | Avg Load:    1.18 kW
+[2025-11-11T19:05:52.371+0000] {subprocess.py:93} INFO -   ✓ House10                   | Avg Load:    1.19 kW
+[2025-11-11T19:05:52.372+0000] {subprocess.py:93} INFO -   ✓ House11                   | Avg Load:    1.00 kW
+[2025-11-11T19:05:52.372+0000] {subprocess.py:93} INFO -   ✓ House12                   | Avg Load:    1.01 kW
+[2025-11-11T19:05:52.373+0000] {subprocess.py:93} INFO -   ✓ House13                   | Avg Load:    1.34 kW
+[2025-11-11T19:05:52.374+0000] {subprocess.py:93} INFO -   ✓ House14                   | Avg Load:    0.93 kW
+[2025-11-11T19:05:52.375+0000] {subprocess.py:93} INFO -   ✓ House15                   | Avg Load:    0.94 kW
+[2025-11-11T19:05:52.375+0000] {subprocess.py:93} INFO - 
+[2025-11-11T19:05:52.376+0000] {subprocess.py:93} INFO - 📊 Génération de 3 Industry(s):
+[2025-11-11T19:05:52.376+0000] {subprocess.py:93} INFO -   ✓ Industry1                 | Avg Load:   18.91 kW
+[2025-11-11T19:05:52.377+0000] {subprocess.py:93} INFO -   ✓ Industry2                 | Avg Load:   21.15 kW
+[2025-11-11T19:05:52.378+0000] {subprocess.py:93} INFO -   ✓ Industry3                 | Avg Load:   20.52 kW
+[2025-11-11T19:05:52.378+0000] {subprocess.py:93} INFO - 
+[2025-11-11T19:05:52.379+0000] {subprocess.py:93} INFO - 📊 Génération de 4 Office(s):
+[2025-11-11T19:05:52.379+0000] {subprocess.py:93} INFO -   ✓ Office1                   | Avg Load:    3.84 kW
+[2025-11-11T19:05:52.380+0000] {subprocess.py:93} INFO -   ✓ Office2                   | Avg Load:    4.43 kW
+[2025-11-11T19:05:52.381+0000] {subprocess.py:93} INFO -   ✓ Office3                   | Avg Load:    4.37 kW
+[2025-11-11T19:05:52.382+0000] {subprocess.py:93} INFO -   ✓ Office4                   | Avg Load:    3.91 kW
+[2025-11-11T19:05:52.382+0000] {subprocess.py:93} INFO - 
+[2025-11-11T19:05:52.383+0000] {subprocess.py:93} INFO - 📊 Génération de 1 School(s):
+[2025-11-11T19:05:52.384+0000] {subprocess.py:93} INFO -   ✓ School                    | Avg Load:    3.27 kW
+[2025-11-11T19:05:52.385+0000] {subprocess.py:93} INFO - 
+[2025-11-11T19:05:52.385+0000] {subprocess.py:93} INFO - 📦 Préparation du chargement en DB...
+[2025-11-11T19:05:52.386+0000] {subprocess.py:93} INFO - 🔄 Création de la table temporaire...
+[2025-11-11T19:05:52.386+0000] {subprocess.py:93} INFO - 📥 Chargement des données dans la table temporaire...
+[2025-11-11T19:05:52.387+0000] {subprocess.py:93} INFO - 🔄 Mise à jour des enregistrements existants...
+[2025-11-11T19:05:52.388+0000] {subprocess.py:93} INFO - ➕ Insertion des nouveaux enregistrements...
+[2025-11-11T19:05:52.388+0000] {subprocess.py:93} INFO - 
+[2025-11-11T19:05:52.389+0000] {subprocess.py:93} INFO - ================================================================================
+[2025-11-11T19:05:52.390+0000] {subprocess.py:93} INFO - ✅ UPSERT TERMINÉ
+[2025-11-11T19:05:52.391+0000] {subprocess.py:93} INFO - 🔄 Lignes mises à jour: 0
+[2025-11-11T19:05:52.392+0000] {subprocess.py:93} INFO - ➕ Nouvelles lignes insérées: 96
+[2025-11-11T19:05:52.392+0000] {subprocess.py:93} INFO - 📊 Total traité: 96 lignes
+[2025-11-11T19:05:52.393+0000] {subprocess.py:93} INFO - ================================================================================
+[2025-11-11T19:05:52.393+0000] {subprocess.py:93} INFO - 
+[2025-11-11T19:05:52.394+0000] {subprocess.py:93} INFO - ================================================================================
+[2025-11-11T19:05:52.395+0000] {subprocess.py:93} INFO - ✅ SUCCÈS! Prévisions énergétiques (6h) générées et chargées
+[2025-11-11T19:05:52.396+0000] {subprocess.py:93} INFO - 📊 Total: 96 lignes
+[2025-11-11T19:05:52.398+0000] {subprocess.py:93} INFO - 📅 Période: 2025-11-11 20:00:00 → 2025-11-11 23:00:00
+[2025-11-11T19:05:52.399+0000] {subprocess.py:93} INFO - ================================================================================
+[2025-11-11T19:05:52.482+0000] {subprocess.py:97} INFO - Command exited with return code 0
+[2025-11-11T19:05:52.524+0000] {taskinstance.py:340} INFO - ::group::Post task execution logs
+[2025-11-11T19:05:52.525+0000] {taskinstance.py:352} INFO - Marking task as SUCCESS. dag_id=unified_weather_energy_pipeline, task_id=regular_energy_update_6h, run_id=scheduled__2025-11-11T12:00:00+00:00, execution_date=20251111T120000, start_date=20251111T190550, end_date=20251111T190552
+[2025-11-11T19:05:52.575+0000] {local_task_job_runner.py:266} INFO - Task exited with return code 0
+[2025-11-11T19:05:52.608+0000] {taskinstance.py:3900} INFO - 0 downstream tasks scheduled from follow-on schedule check
+[2025-11-11T19:05:52.611+0000] {local_task_job_runner.py:245} INFO - ::endgroup::

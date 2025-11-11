@@ -1,3 +1,4 @@
 # Environment configuration
 .env
 .env.cloud
+logs/

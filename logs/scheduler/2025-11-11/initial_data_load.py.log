@@ -1,0 +1,50 @@
+[2025-11-11T18:10:03.996+0000] {processor.py:186} INFO - Started process (PID=1290) to work on /opt/airflow/dags/initial_data_load.py
+[2025-11-11T18:10:03.997+0000] {processor.py:914} INFO - Processing file /opt/airflow/dags/initial_data_load.py for tasks to queue
+[2025-11-11T18:10:04.000+0000] {logging_mixin.py:190} INFO - [2025-11-11T18:10:03.999+0000] {dagbag.py:588} INFO - Filling up the DagBag from /opt/airflow/dags/initial_data_load.py
+[2025-11-11T18:10:04.024+0000] {processor.py:925} INFO - DAG(s) 'initial_data_load_once' retrieved from /opt/airflow/dags/initial_data_load.py
+[2025-11-11T18:10:04.147+0000] {logging_mixin.py:190} INFO - [2025-11-11T18:10:04.146+0000] {override.py:1900} INFO - Created Permission View: can read on DAG:initial_data_load_once
+[2025-11-11T18:10:04.157+0000] {logging_mixin.py:190} INFO - [2025-11-11T18:10:04.157+0000] {override.py:1900} INFO - Created Permission View: can edit on DAG:initial_data_load_once
+[2025-11-11T18:10:04.164+0000] {logging_mixin.py:190} INFO - [2025-11-11T18:10:04.163+0000] {override.py:1900} INFO - Created Permission View: can delete on DAG:initial_data_load_once
+[2025-11-11T18:10:04.173+0000] {logging_mixin.py:190} INFO - [2025-11-11T18:10:04.173+0000] {override.py:1900} INFO - Created Permission View: can delete on DAG Run:initial_data_load_once
+[2025-11-11T18:10:04.180+0000] {logging_mixin.py:190} INFO - [2025-11-11T18:10:04.180+0000] {override.py:1900} INFO - Created Permission View: can read on DAG Run:initial_data_load_once
+[2025-11-11T18:10:04.186+0000] {logging_mixin.py:190} INFO - [2025-11-11T18:10:04.185+0000] {override.py:1900} INFO - Created Permission View: menu access on DAG Run:initial_data_load_once
+[2025-11-11T18:10:04.191+0000] {logging_mixin.py:190} INFO - [2025-11-11T18:10:04.191+0000] {override.py:1900} INFO - Created Permission View: can create on DAG Run:initial_data_load_once
+[2025-11-11T18:10:04.192+0000] {logging_mixin.py:190} INFO - [2025-11-11T18:10:04.192+0000] {dag.py:3239} INFO - Sync 1 DAGs
+[2025-11-11T18:10:04.204+0000] {logging_mixin.py:190} INFO - [2025-11-11T18:10:04.204+0000] {dag.py:3262} INFO - Creating ORM DAG for initial_data_load_once
+[2025-11-11T18:10:04.205+0000] {logging_mixin.py:190} INFO - [2025-11-11T18:10:04.205+0000] {dag.py:4180} INFO - Setting next_dagrun for initial_data_load_once to None, run_after=None
+[2025-11-11T18:10:04.224+0000] {processor.py:208} INFO - Processing /opt/airflow/dags/initial_data_load.py took 0.235 seconds
+[2025-11-11T18:10:34.504+0000] {processor.py:186} INFO - Started process (PID=1309) to work on /opt/airflow/dags/initial_data_load.py
+[2025-11-11T18:10:34.506+0000] {processor.py:914} INFO - Processing file /opt/airflow/dags/initial_data_load.py for tasks to queue
+[2025-11-11T18:10:34.509+0000] {logging_mixin.py:190} INFO - [2025-11-11T18:10:34.509+0000] {dagbag.py:588} INFO - Filling up the DagBag from /opt/airflow/dags/initial_data_load.py
+[2025-11-11T18:10:34.562+0000] {processor.py:925} INFO - DAG(s) 'initial_data_load_once' retrieved from /opt/airflow/dags/initial_data_load.py
+[2025-11-11T18:10:34.629+0000] {logging_mixin.py:190} INFO - [2025-11-11T18:10:34.628+0000] {dag.py:3239} INFO - Sync 1 DAGs
+[2025-11-11T18:10:34.697+0000] {logging_mixin.py:190} INFO - [2025-11-11T18:10:34.696+0000] {dag.py:4180} INFO - Setting next_dagrun for initial_data_load_once to None, run_after=None
+[2025-11-11T18:10:34.736+0000] {processor.py:208} INFO - Processing /opt/airflow/dags/initial_data_load.py took 0.246 seconds
+[2025-11-11T18:11:04.853+0000] {processor.py:186} INFO - Started process (PID=1327) to work on /opt/airflow/dags/initial_data_load.py
+[2025-11-11T18:11:04.854+0000] {processor.py:914} INFO - Processing file /opt/airflow/dags/initial_data_load.py for tasks to queue
+[2025-11-11T18:11:04.856+0000] {logging_mixin.py:190} INFO - [2025-11-11T18:11:04.855+0000] {dagbag.py:588} INFO - Filling up the DagBag from /opt/airflow/dags/initial_data_load.py
+[2025-11-11T18:11:04.881+0000] {processor.py:925} INFO - DAG(s) 'initial_data_load_once' retrieved from /opt/airflow/dags/initial_data_load.py
+[2025-11-11T18:11:04.916+0000] {logging_mixin.py:190} INFO - [2025-11-11T18:11:04.916+0000] {dag.py:3239} INFO - Sync 1 DAGs
+[2025-11-11T18:11:04.939+0000] {logging_mixin.py:190} INFO - [2025-11-11T18:11:04.939+0000] {dag.py:4180} INFO - Setting next_dagrun for initial_data_load_once to None, run_after=None
+[2025-11-11T18:11:04.970+0000] {processor.py:208} INFO - Processing /opt/airflow/dags/initial_data_load.py took 0.126 seconds
+[2025-11-11T18:11:35.204+0000] {processor.py:186} INFO - Started process (PID=1345) to work on /opt/airflow/dags/initial_data_load.py
+[2025-11-11T18:11:35.205+0000] {processor.py:914} INFO - Processing file /opt/airflow/dags/initial_data_load.py for tasks to queue
+[2025-11-11T18:11:35.207+0000] {logging_mixin.py:190} INFO - [2025-11-11T18:11:35.206+0000] {dagbag.py:588} INFO - Filling up the DagBag from /opt/airflow/dags/initial_data_load.py
+[2025-11-11T18:11:35.234+0000] {processor.py:925} INFO - DAG(s) 'initial_data_load_once' retrieved from /opt/airflow/dags/initial_data_load.py
+[2025-11-11T18:11:35.285+0000] {logging_mixin.py:190} INFO - [2025-11-11T18:11:35.285+0000] {dag.py:3239} INFO - Sync 1 DAGs
+[2025-11-11T18:11:35.308+0000] {logging_mixin.py:190} INFO - [2025-11-11T18:11:35.308+0000] {dag.py:4180} INFO - Setting next_dagrun for initial_data_load_once to None, run_after=None
+[2025-11-11T18:11:35.335+0000] {processor.py:208} INFO - Processing /opt/airflow/dags/initial_data_load.py took 0.139 seconds
+[2025-11-11T18:12:05.674+0000] {processor.py:186} INFO - Started process (PID=1363) to work on /opt/airflow/dags/initial_data_load.py
+[2025-11-11T18:12:05.676+0000] {processor.py:914} INFO - Processing file /opt/airflow/dags/initial_data_load.py for tasks to queue
+[2025-11-11T18:12:05.678+0000] {logging_mixin.py:190} INFO - [2025-11-11T18:12:05.677+0000] {dagbag.py:588} INFO - Filling up the DagBag from /opt/airflow/dags/initial_data_load.py
+[2025-11-11T18:12:05.700+0000] {processor.py:925} INFO - DAG(s) 'initial_data_load_once' retrieved from /opt/airflow/dags/initial_data_load.py
+[2025-11-11T18:12:05.736+0000] {logging_mixin.py:190} INFO - [2025-11-11T18:12:05.736+0000] {dag.py:3239} INFO - Sync 1 DAGs
+[2025-11-11T18:12:05.755+0000] {logging_mixin.py:190} INFO - [2025-11-11T18:12:05.755+0000] {dag.py:4180} INFO - Setting next_dagrun for initial_data_load_once to None, run_after=None
+[2025-11-11T18:12:05.779+0000] {processor.py:208} INFO - Processing /opt/airflow/dags/initial_data_load.py took 0.113 seconds
+[2025-11-11T18:12:36.054+0000] {processor.py:186} INFO - Started process (PID=1381) to work on /opt/airflow/dags/initial_data_load.py
+[2025-11-11T18:12:36.057+0000] {processor.py:914} INFO - Processing file /opt/airflow/dags/initial_data_load.py for tasks to queue
+[2025-11-11T18:12:36.060+0000] {logging_mixin.py:190} INFO - [2025-11-11T18:12:36.059+0000] {dagbag.py:588} INFO - Filling up the DagBag from /opt/airflow/dags/initial_data_load.py
+[2025-11-11T18:12:36.094+0000] {processor.py:925} INFO - DAG(s) 'initial_data_load_once' retrieved from /opt/airflow/dags/initial_data_load.py
+[2025-11-11T18:12:36.141+0000] {logging_mixin.py:190} INFO - [2025-11-11T18:12:36.141+0000] {dag.py:3239} INFO - Sync 1 DAGs
+[2025-11-11T18:12:36.165+0000] {logging_mixin.py:190} INFO - [2025-11-11T18:12:36.164+0000] {dag.py:4180} INFO - Setting next_dagrun for initial_data_load_once to None, run_after=None
+[2025-11-11T18:12:36.194+0000] {processor.py:208} INFO - Processing /opt/airflow/dags/initial_data_load.py took 0.148 seconds

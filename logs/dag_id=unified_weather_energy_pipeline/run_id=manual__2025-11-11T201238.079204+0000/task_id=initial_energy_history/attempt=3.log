@@ -1,0 +1,142 @@
+[2025-11-11T20:21:04.295+0000] {local_task_job_runner.py:123} INFO - ::group::Pre task execution logs
+[2025-11-11T20:21:04.316+0000] {taskinstance.py:2612} INFO - Dependencies all met for dep_context=non-requeueable deps ti=<TaskInstance: unified_weather_energy_pipeline.initial_energy_history manual__2025-11-11T20:12:38.079204+00:00 [queued]>
+[2025-11-11T20:21:04.328+0000] {taskinstance.py:2612} INFO - Dependencies all met for dep_context=requeueable deps ti=<TaskInstance: unified_weather_energy_pipeline.initial_energy_history manual__2025-11-11T20:12:38.079204+00:00 [queued]>
+[2025-11-11T20:21:04.329+0000] {taskinstance.py:2865} INFO - Starting attempt 3 of 5
+[2025-11-11T20:21:04.343+0000] {taskinstance.py:2888} INFO - Executing <Task(BashOperator): initial_energy_history> on 2025-11-11 20:12:38.079204+00:00
+[2025-11-11T20:21:04.351+0000] {standard_task_runner.py:104} INFO - Running: ['airflow', 'tasks', 'run', 'unified_weather_energy_pipeline', 'initial_energy_history', 'manual__2025-11-11T20:12:38.079204+00:00', '--job-id', '26', '--raw', '--subdir', 'DAGS_FOLDER/weather_energy_dag.py', '--cfg-path', '/tmp/tmpo4i79513']
+[2025-11-11T20:21:04.354+0000] {standard_task_runner.py:105} INFO - Job 26: Subtask initial_energy_history
+[2025-11-11T20:21:04.354+0000] {logging_mixin.py:190} WARNING - /home/airflow/.local/lib/python3.12/site-packages/airflow/task/task_runner/standard_task_runner.py:70 DeprecationWarning: This process (pid=2063) is multi-threaded, use of fork() may lead to deadlocks in the child.
+[2025-11-11T20:21:04.356+0000] {standard_task_runner.py:72} INFO - Started process 2064 to run task
+[2025-11-11T20:21:04.413+0000] {task_command.py:467} INFO - Running <TaskInstance: unified_weather_energy_pipeline.initial_energy_history manual__2025-11-11T20:12:38.079204+00:00 [running]> on host 3962d829321f
+[2025-11-11T20:21:04.520+0000] {taskinstance.py:3131} INFO - Exporting env vars: AIRFLOW_CTX_DAG_OWNER='hamza' AIRFLOW_CTX_DAG_ID='unified_weather_energy_pipeline' AIRFLOW_CTX_TASK_ID='initial_energy_history' AIRFLOW_CTX_EXECUTION_DATE='2025-11-11T20:12:38.079204+00:00' AIRFLOW_CTX_TRY_NUMBER='3' AIRFLOW_CTX_DAG_RUN_ID='manual__2025-11-11T20:12:38.079204+00:00'
+[2025-11-11T20:21:04.522+0000] {taskinstance.py:731} INFO - ::endgroup::
+[2025-11-11T20:21:04.537+0000] {subprocess.py:63} INFO - Tmp dir root location: /tmp
+[2025-11-11T20:21:04.539+0000] {subprocess.py:75} INFO - Running command: ['/usr/bin/bash', '-c', 'cd /opt/airflow && PYTHONPATH=/opt/airflow python -m src.pipeline.generator.energy_cons_generator']
+[2025-11-11T20:21:04.549+0000] {subprocess.py:86} INFO - Output:
+[2025-11-11T20:23:56.266+0000] {subprocess.py:93} INFO - ================================================================================
+[2025-11-11T20:23:56.267+0000] {subprocess.py:93} INFO - 🚀 GÉNÉRATION RÉALISTE DES DONNÉES ÉNERGÉTIQUES
+[2025-11-11T20:23:56.269+0000] {subprocess.py:93} INFO - ================================================================================
+[2025-11-11T20:23:56.270+0000] {subprocess.py:93} INFO - 
+[2025-11-11T20:23:56.270+0000] {subprocess.py:93} INFO - ================================================================================
+[2025-11-11T20:23:56.271+0000] {subprocess.py:93} INFO - 📡 RÉCUPÉRATION DES DONNÉES MÉTÉO RÉELLES DEPUIS LA BASE
+[2025-11-11T20:23:56.271+0000] {subprocess.py:93} INFO - ================================================================================
+[2025-11-11T20:23:56.272+0000] {subprocess.py:93} INFO - 🔍 Exécution de la requête SQL...
+[2025-11-11T20:23:56.272+0000] {subprocess.py:93} INFO - ✅ 16341 heures de données météo récupérées
+[2025-11-11T20:23:56.273+0000] {subprocess.py:93} INFO - 📅 Période: 2024-01-01 00:00:00 → 2025-11-11 20:00:00
+[2025-11-11T20:23:56.273+0000] {subprocess.py:93} INFO - 🌡️  Température: min=4.9°C, max=40.9°C
+[2025-11-11T20:23:56.274+0000] {subprocess.py:93} INFO - 
+[2025-11-11T20:23:56.274+0000] {subprocess.py:93} INFO - 📊 Génération de 1 Hospital(s):
+[2025-11-11T20:23:56.275+0000] {subprocess.py:93} INFO -   ✓ Hospital
+[2025-11-11T20:23:56.275+0000] {subprocess.py:93} INFO -     Jan:  289.6 | Apr:  297.1 | Jul:  336.3 | Oct:  322.5 | Dec:  289.9
+[2025-11-11T20:23:56.276+0000] {subprocess.py:93} INFO - 
+[2025-11-11T20:23:56.277+0000] {subprocess.py:93} INFO - 📊 Génération de 15 House(s):
+[2025-11-11T20:23:56.277+0000] {subprocess.py:93} INFO -       Profile: summer_vacation | Vacations: [7, 8] | AC: True | Heating: electric
+[2025-11-11T20:23:56.278+0000] {subprocess.py:93} INFO -   ✓ House1
+[2025-11-11T20:23:56.279+0000] {subprocess.py:93} INFO -     Jan:   26.4 | Apr:   26.9 | Jul:   14.8 | Oct:   28.6 | Dec:   26.5
+[2025-11-11T20:23:56.279+0000] {subprocess.py:93} INFO -       Profile: winter_vacation | Vacations: [12] | AC: False | Heating: gas
+[2025-11-11T20:23:56.279+0000] {subprocess.py:93} INFO -   ✓ House2
+[2025-11-11T20:23:56.280+0000] {subprocess.py:93} INFO -     Jan:   29.7 | Apr:   31.7 | Jul:   36.9 | Oct:   35.3 | Dec:   14.5
+[2025-11-11T20:23:56.281+0000] {subprocess.py:93} INFO -       Profile: always_home_ac | Vacations: [] | AC: True | Heating: electric
+[2025-11-11T20:23:56.281+0000] {subprocess.py:93} INFO -   ✓ House3
+[2025-11-11T20:23:56.282+0000] {subprocess.py:93} INFO -     Jan:   30.2 | Apr:   30.7 | Jul:   35.9 | Oct:   33.1 | Dec:   30.2
+[2025-11-11T20:23:56.282+0000] {subprocess.py:93} INFO -       Profile: always_home_ac | Vacations: [] | AC: True | Heating: electric
+[2025-11-11T20:23:56.283+0000] {subprocess.py:93} INFO -   ✓ House4
+[2025-11-11T20:23:56.284+0000] {subprocess.py:93} INFO -     Jan:   25.6 | Apr:   23.9 | Jul:   26.0 | Oct:   24.6 | Dec:   25.3
+[2025-11-11T20:23:56.284+0000] {subprocess.py:93} INFO -       Profile: always_home_no_ac | Vacations: [] | AC: False | Heating: electric
+[2025-11-11T20:23:56.285+0000] {subprocess.py:93} INFO -   ✓ House5
+[2025-11-11T20:23:56.285+0000] {subprocess.py:93} INFO -     Jan:   24.2 | Apr:   20.6 | Jul:   20.2 | Oct:   19.9 | Dec:   23.9
+[2025-11-11T20:23:56.285+0000] {subprocess.py:93} INFO -       Profile: always_home_no_ac | Vacations: [] | AC: False | Heating: electric
+[2025-11-11T20:23:56.285+0000] {subprocess.py:93} INFO -   ✓ House6
+[2025-11-11T20:23:56.286+0000] {subprocess.py:93} INFO -     Jan:   25.8 | Apr:   24.4 | Jul:   25.6 | Oct:   25.0 | Dec:   25.7
+[2025-11-11T20:23:56.286+0000] {subprocess.py:93} INFO -       Profile: work_from_home | Vacations: [8] | AC: True | Heating: heatpump
+[2025-11-11T20:23:56.287+0000] {subprocess.py:93} INFO -   ✓ House7
+[2025-11-11T20:23:56.287+0000] {subprocess.py:93} INFO -     Jan:   25.1 | Apr:   24.7 | Jul:   28.5 | Oct:   26.2 | Dec:   25.0
+[2025-11-11T20:23:56.287+0000] {subprocess.py:93} INFO -       Profile: work_from_home | Vacations: [8] | AC: True | Heating: heatpump
+[2025-11-11T20:23:56.287+0000] {subprocess.py:93} INFO -   ✓ House8
+[2025-11-11T20:23:56.288+0000] {subprocess.py:93} INFO -     Jan:   29.4 | Apr:   30.8 | Jul:   36.6 | Oct:   33.6 | Dec:   29.5
+[2025-11-11T20:23:56.288+0000] {subprocess.py:93} INFO -       Profile: work_from_home | Vacations: [8] | AC: True | Heating: heatpump
+[2025-11-11T20:23:56.288+0000] {subprocess.py:93} INFO -   ✓ House9
+[2025-11-11T20:23:56.289+0000] {subprocess.py:93} INFO -     Jan:   29.5 | Apr:   31.0 | Jul:   37.2 | Oct:   33.9 | Dec:   29.4
+[2025-11-11T20:23:56.289+0000] {subprocess.py:93} INFO -       Profile: student_house | Vacations: [7, 8, 12] | AC: False | Heating: gas
+[2025-11-11T20:23:56.289+0000] {subprocess.py:93} INFO -   ✓ House10
+[2025-11-11T20:23:56.289+0000] {subprocess.py:93} INFO -     Jan:   21.7 | Apr:   22.5 | Jul:   13.3 | Oct:   24.7 | Dec:   13.3
+[2025-11-11T20:23:56.290+0000] {subprocess.py:93} INFO -       Profile: student_house | Vacations: [7, 8, 12] | AC: False | Heating: gas
+[2025-11-11T20:23:56.291+0000] {subprocess.py:93} INFO -   ✓ House11
+[2025-11-11T20:23:56.292+0000] {subprocess.py:93} INFO -     Jan:   19.0 | Apr:   18.5 | Jul:   12.1 | Oct:   19.8 | Dec:   12.1
+[2025-11-11T20:23:56.292+0000] {subprocess.py:93} INFO -       Profile: large_family | Vacations: [7] | AC: True | Heating: electric
+[2025-11-11T20:23:56.293+0000] {subprocess.py:93} INFO -   ✓ House12
+[2025-11-11T20:23:56.293+0000] {subprocess.py:93} INFO -     Jan:   29.8 | Apr:   28.0 | Jul:   12.8 | Oct:   28.7 | Dec:   29.5
+[2025-11-11T20:23:56.293+0000] {subprocess.py:93} INFO -       Profile: large_family | Vacations: [7] | AC: True | Heating: electric
+[2025-11-11T20:23:56.294+0000] {subprocess.py:93} INFO -   ✓ House13
+[2025-11-11T20:23:56.294+0000] {subprocess.py:93} INFO -     Jan:   35.6 | Apr:   37.3 | Jul:   16.2 | Oct:   40.1 | Dec:   35.9
+[2025-11-11T20:23:56.294+0000] {subprocess.py:93} INFO -       Profile: large_family | Vacations: [7] | AC: True | Heating: electric
+[2025-11-11T20:23:56.295+0000] {subprocess.py:93} INFO -   ✓ House14
+[2025-11-11T20:23:56.295+0000] {subprocess.py:93} INFO -     Jan:   28.9 | Apr:   27.1 | Jul:   12.8 | Oct:   27.9 | Dec:   28.6
+[2025-11-11T20:23:56.295+0000] {subprocess.py:93} INFO - Warning: house_id 16 is out of range, using default profile.
+[2025-11-11T20:23:56.296+0000] {subprocess.py:93} INFO -       Profile: summer_vacation | Vacations: [7, 8] | AC: True | Heating: electric
+[2025-11-11T20:23:56.296+0000] {subprocess.py:93} INFO -   ✓ House15
+[2025-11-11T20:23:56.297+0000] {subprocess.py:93} INFO -     Jan:   23.9 | Apr:   22.1 | Jul:   12.4 | Oct:   22.8 | Dec:   23.6
+[2025-11-11T20:23:56.297+0000] {subprocess.py:93} INFO - 
+[2025-11-11T20:23:56.298+0000] {subprocess.py:93} INFO - 📊 Génération de 3 Industry(s):
+[2025-11-11T20:23:56.299+0000] {subprocess.py:93} INFO -   ✓ Industry1
+[2025-11-11T20:23:56.299+0000] {subprocess.py:93} INFO -     Jan:  450.4 | Apr:  448.5 | Jul:  459.7 | Oct:  457.2 | Dec:  449.2
+[2025-11-11T20:23:56.299+0000] {subprocess.py:93} INFO -   ✓ Industry2
+[2025-11-11T20:23:56.300+0000] {subprocess.py:93} INFO -     Jan:  510.3 | Apr:  507.0 | Jul:  515.7 | Oct:  513.0 | Dec:  509.4
+[2025-11-11T20:23:56.300+0000] {subprocess.py:93} INFO -   ✓ Industry3
+[2025-11-11T20:23:56.301+0000] {subprocess.py:93} INFO -     Jan:  498.2 | Apr:  495.1 | Jul:  505.4 | Oct:  503.7 | Dec:  497.3
+[2025-11-11T20:23:56.301+0000] {subprocess.py:93} INFO - 
+[2025-11-11T20:23:56.301+0000] {subprocess.py:93} INFO - 📊 Génération de 4 Office(s):
+[2025-11-11T20:23:56.301+0000] {subprocess.py:93} INFO -   ✓ Office1
+[2025-11-11T20:23:56.302+0000] {subprocess.py:93} INFO -     Jan:   99.3 | Apr:   97.2 | Jul:   97.7 | Oct:   98.9 | Dec:   94.2
+[2025-11-11T20:23:56.302+0000] {subprocess.py:93} INFO -   ✓ Office2
+[2025-11-11T20:23:56.302+0000] {subprocess.py:93} INFO -     Jan:  113.9 | Apr:  111.5 | Jul:  114.8 | Oct:  115.5 | Dec:  106.9
+[2025-11-11T20:23:56.303+0000] {subprocess.py:93} INFO -   ✓ Office3
+[2025-11-11T20:23:56.303+0000] {subprocess.py:93} INFO -     Jan:  108.1 | Apr:  105.8 | Jul:  107.0 | Oct:  108.4 | Dec:  101.8
+[2025-11-11T20:23:56.303+0000] {subprocess.py:93} INFO -   ✓ Office4
+[2025-11-11T20:23:56.304+0000] {subprocess.py:93} INFO -     Jan:   97.6 | Apr:   95.5 | Jul:   97.4 | Oct:   97.6 | Dec:   92.7
+[2025-11-11T20:23:56.305+0000] {subprocess.py:93} INFO - 
+[2025-11-11T20:23:56.305+0000] {subprocess.py:93} INFO - 📊 Génération de 1 School(s):
+[2025-11-11T20:23:56.305+0000] {subprocess.py:93} INFO -   ✓ School
+[2025-11-11T20:23:56.306+0000] {subprocess.py:93} INFO -     Jan:   83.6 | Apr:   81.7 | Jul:   57.6 | Oct:   83.1 | Dec:   80.0
+[2025-11-11T20:23:56.306+0000] {subprocess.py:93} INFO - 
+[2025-11-11T20:23:56.306+0000] {subprocess.py:93} INFO - 📦 Création du fichier global...
+[2025-11-11T20:23:56.307+0000] {subprocess.py:93} INFO -   ✓ /opt/airflow/data/energy_consumption.csv | Total rows: 392,184
+[2025-11-11T20:23:56.307+0000] {subprocess.py:93} INFO - ⚠️  Utilisation de la fonction legacy - redirection vers UPSERT
+[2025-11-11T20:23:56.308+0000] {subprocess.py:93} INFO - 🔄 Création de la table temporaire...
+[2025-11-11T20:23:56.308+0000] {subprocess.py:93} INFO - 📥 Chargement des données dans la table temporaire...
+[2025-11-11T20:23:56.308+0000] {subprocess.py:93} INFO - 🔄 Mise à jour des enregistrements existants...
+[2025-11-11T20:23:56.309+0000] {subprocess.py:93} INFO - ➕ Insertion des nouveaux enregistrements...
+[2025-11-11T20:23:56.309+0000] {subprocess.py:93} INFO - 
+[2025-11-11T20:23:56.309+0000] {subprocess.py:93} INFO - ================================================================================
+[2025-11-11T20:23:56.310+0000] {subprocess.py:93} INFO - ✅ UPSERT TERMINÉ
+[2025-11-11T20:23:56.310+0000] {subprocess.py:93} INFO - 🔄 Lignes mises à jour: 0
+[2025-11-11T20:23:56.311+0000] {subprocess.py:93} INFO - ➕ Nouvelles lignes insérées: 392184
+[2025-11-11T20:23:56.312+0000] {subprocess.py:93} INFO - 📊 Total traité: 392184 lignes
+[2025-11-11T20:23:56.312+0000] {subprocess.py:93} INFO - ================================================================================
+[2025-11-11T20:23:56.313+0000] {subprocess.py:93} INFO - 
+[2025-11-11T20:23:56.313+0000] {subprocess.py:93} INFO - ================================================================================
+[2025-11-11T20:23:56.313+0000] {subprocess.py:93} INFO - ✅ SUCCÈS! Dataset RÉALISTE généré
+[2025-11-11T20:23:56.314+0000] {subprocess.py:93} INFO - 📦 Fichier: /opt/airflow/data/energy_consumption.csv
+[2025-11-11T20:23:56.314+0000] {subprocess.py:93} INFO - ================================================================================
+[2025-11-11T20:23:56.314+0000] {subprocess.py:93} INFO - 
+[2025-11-11T20:23:56.315+0000] {subprocess.py:93} INFO - 🎯 CARACTÉRISTIQUES RÉALISTES:
+[2025-11-11T20:23:56.315+0000] {subprocess.py:93} INFO -   ✓ Hôpital: Consommation stable toute l'année (24/7)
+[2025-11-11T20:23:56.315+0000] {subprocess.py:93} INFO -   ✓ Houses 1-2: Vacances d'été (Jul-Aug) = conso minimale
+[2025-11-11T20:23:56.316+0000] {subprocess.py:93} INFO -   ✓ House 3: Vacances d'hiver (Dec) = conso minimale
+[2025-11-11T20:23:56.316+0000] {subprocess.py:93} INFO -   ✓ Houses 4-5: Toujours occupées avec clim (haute conso en été)
+[2025-11-11T20:23:56.316+0000] {subprocess.py:93} INFO -   ✓ Houses 6-7: Toujours occupées sans clim (économes)
+[2025-11-11T20:23:56.316+0000] {subprocess.py:93} INFO -   ✓ Houses 8-10: Télétravail (haute conso journée)
+[2025-11-11T20:23:56.317+0000] {subprocess.py:93} INFO -   ✓ Houses 11-12: Étudiants (basse conso + vacances longues)
+[2025-11-11T20:23:56.317+0000] {subprocess.py:93} INFO -   ✓ Houses 13-15: Familles nombreuses (haute conso toute l'année)
+[2025-11-11T20:23:56.318+0000] {subprocess.py:93} INFO -   ✓ Temp > 28°C → Clim boost (si équipée)
+[2025-11-11T20:23:56.318+0000] {subprocess.py:93} INFO -   ✓ Temp < 15°C → Chauffage boost (électrique/gaz/pompe)
+[2025-11-11T20:23:56.319+0000] {subprocess.py:93} INFO -   ✓ Industries: Production continue (pas de variations saisonnières)
+[2025-11-11T20:23:56.319+0000] {subprocess.py:93} INFO -   ✓ Bureaux: Réduit week-end/vacances
+[2025-11-11T20:23:56.320+0000] {subprocess.py:93} INFO -   ✓ École: Fermée vacances scolaires (Jun-Jul-Aug)
+[2025-11-11T20:23:56.320+0000] {subprocess.py:93} INFO - ================================================================================
+[2025-11-11T20:23:56.382+0000] {subprocess.py:97} INFO - Command exited with return code 0
+[2025-11-11T20:23:56.446+0000] {taskinstance.py:340} INFO - ::group::Post task execution logs
+[2025-11-11T20:23:56.447+0000] {taskinstance.py:352} INFO - Marking task as SUCCESS. dag_id=unified_weather_energy_pipeline, task_id=initial_energy_history, run_id=manual__2025-11-11T20:12:38.079204+00:00, execution_date=20251111T201238, start_date=20251111T202104, end_date=20251111T202356
+[2025-11-11T20:23:56.482+0000] {local_task_job_runner.py:266} INFO - Task exited with return code 0
+[2025-11-11T20:23:56.522+0000] {taskinstance.py:3900} INFO - 1 downstream tasks scheduled from follow-on schedule check
+[2025-11-11T20:23:56.525+0000] {local_task_job_runner.py:245} INFO - ::endgroup::

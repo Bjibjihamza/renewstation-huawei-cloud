@@ -22,7 +22,7 @@ CREATE DATABASE silver;
 -- TABLE 1: ENERGY CONSUMPTION – HOURLY FACT TABLE (SILVER)
 -- =============================================================================
 
-CREATE TABLE energy_consumption_hourly (
+CREATE TABLE IF NOT EXISTS energy_consumption_hourly (
     -- Time & building identification
     time_ts                TIMESTAMP      NOT NULL,  -- 'Time'
     building               VARCHAR(50)    NOT NULL,  -- 'Building'
@@ -33,7 +33,7 @@ CREATE TABLE energy_consumption_hourly (
     summer_flag            SMALLINT       NOT NULL,  -- 'Summer' (0/1)
     fall_flag              SMALLINT       NOT NULL,  -- 'Fall'   (0/1)
 
-    -- Weather-related features
+    -- Weather-related features (REAL DATA from weather_forecast_hourly)
     outdoor_temp_c         NUMERIC(5,2),             -- 'Outdoor Temp (°C)'
     humidity_pct           NUMERIC(5,2),             -- 'Humidity (%)'
     cloud_cover_pct        NUMERIC(5,2),             -- 'Cloud Cover (%)'
@@ -54,11 +54,25 @@ CREATE TABLE energy_consumption_hourly (
     special_equipment_kw   NUMERIC(10,4),            -- 'Special Equipment [kW]'
     use_kw                 NUMERIC(10,4),            -- 'Use [kW]' (total load)
 
+    -- Primary key: unique per timestamp and building
     CONSTRAINT pk_energy_silver PRIMARY KEY (time_ts, building)
-)
-DISTRIBUTE BY HASH(building)
-WITH (orientation = column, compression = low);
+);
 
+
+CREATE INDEX IF NOT EXISTS idx_energy_time 
+    ON energy_consumption_hourly(time_ts);
+
+-- Index sur le building (filtres par bâtiment)
+CREATE INDEX IF NOT EXISTS idx_energy_building 
+    ON energy_consumption_hourly(building);
+
+-- Index composite pour requêtes fréquentes
+CREATE INDEX IF NOT EXISTS idx_energy_time_building 
+    ON energy_consumption_hourly(time_ts, building);
+
+-- Index sur les features temporelles (pour ML queries)
+CREATE INDEX IF NOT EXISTS idx_energy_temporal 
+    ON energy_consumption_hourly(month_num, day_of_week, hour_of_day);
 -- Columnar + hash distribution by building for good analytical performance.
 -- =============================================================================
 
@@ -74,42 +88,45 @@ WITH (orientation = column, compression = low);
 -- Description: Prévisions météo horaires pour Casablanca
 -- ============================================================================
 
-CREATE TABLE IF NOT EXISTS weather_forecast_hourly (
-    id SERIAL PRIMARY KEY,
-    forecast_timestamp TIMESTAMP NOT NULL,
+DROP TABLE IF EXISTS weather_forecast_hourly CASCADE;
+
+CREATE TABLE weather_forecast_hourly (
+    -- Clé primaire: timestamp unique pour chaque prévision
+    forecast_timestamp TIMESTAMP PRIMARY KEY,
+    
+    -- Date et heure séparées (pour faciliter les requêtes)
     forecast_date DATE NOT NULL,
     forecast_time TIME NOT NULL,
-    temperature_c NUMERIC(5, 2),
-    humidity_pct NUMERIC(5, 2),
-    precipitation_mm NUMERIC(6, 2),
-    precipitation_probability_pct NUMERIC(5, 2),
-    weather_conditions VARCHAR(100),
-    wind_speed_kmh NUMERIC(6, 2),
-    wind_direction_deg NUMERIC(5, 2),
-    pressure_hpa NUMERIC(7, 2),
-    cloud_cover_pct NUMERIC(5, 2),
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    
+    -- Données météorologiques
+    temperature_c NUMERIC(5,2),                      -- Température en °C
+    humidity_pct NUMERIC(5,2),                       -- Humidité relative en %
+    precipitation_mm NUMERIC(6,2),                   -- Précipitations en mm
+    precipitation_probability_pct NUMERIC(5,2),      -- Probabilité de pluie en %
+    weather_conditions VARCHAR(100),                 -- Description textuelle
+    wind_speed_kmh NUMERIC(6,2),                     -- Vitesse du vent en km/h
+    wind_direction_deg NUMERIC(5,2),                 -- Direction du vent en degrés
+    pressure_hpa NUMERIC(7,2),                       -- Pression atmosphérique en hPa
+    cloud_cover_pct NUMERIC(5,2),                    -- Couverture nuageuse en %
+    solar_radiation_w_m2 NUMERIC(8,2),               -- ☀️ Rayonnement solaire en W/m²
+
+    -- Métadonnées de suivi
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
--- Index pour améliorer les performances
-CREATE INDEX IF NOT EXISTS idx_weather_forecast_timestamp 
-    ON weather_forecast_hourly(forecast_timestamp);
 
-CREATE INDEX IF NOT EXISTS idx_weather_forecast_date 
-    ON weather_forecast_hourly(forecast_date);
+-- Index pour accélérer les requêtes
+CREATE INDEX idx_weather_forecast_date ON weather_forecast_hourly(forecast_date);
+CREATE INDEX idx_weather_forecast_timestamp ON weather_forecast_hourly(forecast_timestamp);
+CREATE INDEX idx_weather_conditions ON weather_forecast_hourly(weather_conditions);
 
--- Commentaires
-COMMENT ON TABLE weather_forecast_hourly IS 'Prévisions météo horaires récupérées depuis Open-Meteo API';
-COMMENT ON COLUMN weather_forecast_hourly.forecast_timestamp IS 'Date et heure de la prévision';
-COMMENT ON COLUMN weather_forecast_hourly.temperature_c IS 'Température en degrés Celsius';
-COMMENT ON COLUMN weather_forecast_hourly.humidity_pct IS 'Humidité relative en pourcentage';
-COMMENT ON COLUMN weather_forecast_hourly.precipitation_mm IS 'Précipitation en millimètres';
-COMMENT ON COLUMN weather_forecast_hourly.precipitation_probability_pct IS 'Probabilité de pluie en pourcentage';
-COMMENT ON COLUMN weather_forecast_hourly.weather_conditions IS 'Description des conditions météo';
-COMMENT ON COLUMN weather_forecast_hourly.wind_speed_kmh IS 'Vitesse du vent en km/h';
-COMMENT ON COLUMN weather_forecast_hourly.wind_direction_deg IS 'Direction du vent en degrés';
-COMMENT ON COLUMN weather_forecast_hourly.pressure_hpa IS 'Pression atmosphérique en hPa';
-COMMENT ON COLUMN weather_forecast_hourly.cloud_cover_pct IS 'Couverture nuageuse en pourcentage';
+
+-- Index sur les conditions météo (pour filtrer par type de temps)
+
+
 -- =============================================================================
 
+
 -- END OF SILVER LAYER DEFINITION (for now).
+

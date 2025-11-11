@@ -1,0 +1,48 @@
+[2025-11-11T20:18:46.033+0000] {local_task_job_runner.py:123} INFO - ::group::Pre task execution logs
+[2025-11-11T20:18:46.061+0000] {taskinstance.py:2612} INFO - Dependencies all met for dep_context=non-requeueable deps ti=<TaskInstance: unified_weather_energy_pipeline.initial_energy_history manual__2025-11-11T20:12:38.079204+00:00 [queued]>
+[2025-11-11T20:18:46.077+0000] {taskinstance.py:2612} INFO - Dependencies all met for dep_context=requeueable deps ti=<TaskInstance: unified_weather_energy_pipeline.initial_energy_history manual__2025-11-11T20:12:38.079204+00:00 [queued]>
+[2025-11-11T20:18:46.078+0000] {taskinstance.py:2865} INFO - Starting attempt 2 of 4
+[2025-11-11T20:18:46.105+0000] {taskinstance.py:2888} INFO - Executing <Task(BashOperator): initial_energy_history> on 2025-11-11 20:12:38.079204+00:00
+[2025-11-11T20:18:46.117+0000] {standard_task_runner.py:104} INFO - Running: ['airflow', 'tasks', 'run', 'unified_weather_energy_pipeline', 'initial_energy_history', 'manual__2025-11-11T20:12:38.079204+00:00', '--job-id', '23', '--raw', '--subdir', 'DAGS_FOLDER/weather_energy_dag.py', '--cfg-path', '/tmp/tmpcq3p8df4']
+[2025-11-11T20:18:46.125+0000] {standard_task_runner.py:105} INFO - Job 23: Subtask initial_energy_history
+[2025-11-11T20:18:46.127+0000] {logging_mixin.py:190} WARNING - /home/airflow/.local/lib/python3.12/site-packages/airflow/task/task_runner/standard_task_runner.py:70 DeprecationWarning: This process (pid=1988) is multi-threaded, use of fork() may lead to deadlocks in the child.
+[2025-11-11T20:18:46.129+0000] {standard_task_runner.py:72} INFO - Started process 1989 to run task
+[2025-11-11T20:18:46.232+0000] {task_command.py:467} INFO - Running <TaskInstance: unified_weather_energy_pipeline.initial_energy_history manual__2025-11-11T20:12:38.079204+00:00 [running]> on host 3962d829321f
+[2025-11-11T20:18:46.350+0000] {taskinstance.py:3131} INFO - Exporting env vars: AIRFLOW_CTX_DAG_OWNER='hamza' AIRFLOW_CTX_DAG_ID='unified_weather_energy_pipeline' AIRFLOW_CTX_TASK_ID='initial_energy_history' AIRFLOW_CTX_EXECUTION_DATE='2025-11-11T20:12:38.079204+00:00' AIRFLOW_CTX_TRY_NUMBER='2' AIRFLOW_CTX_DAG_RUN_ID='manual__2025-11-11T20:12:38.079204+00:00'
+[2025-11-11T20:18:46.351+0000] {taskinstance.py:731} INFO - ::endgroup::
+[2025-11-11T20:18:46.366+0000] {subprocess.py:63} INFO - Tmp dir root location: /tmp
+[2025-11-11T20:18:46.368+0000] {subprocess.py:75} INFO - Running command: ['/usr/bin/bash', '-c', 'cd /opt/airflow && PYTHONPATH=/opt/airflow python -m src.pipeline.generator.energy_cons_generator']
+[2025-11-11T20:18:46.378+0000] {subprocess.py:86} INFO - Output:
+[2025-11-11T20:20:31.940+0000] {local_task_job_runner.py:346} WARNING - State of this instance has been externally set to restarting. Terminating instance.
+[2025-11-11T20:20:31.941+0000] {local_task_job_runner.py:245} INFO - ::endgroup::
+[2025-11-11T20:20:31.953+0000] {process_utils.py:132} INFO - Sending 15 to group 1989. PIDs of all processes in the group: [1991, 1989]
+[2025-11-11T20:20:31.955+0000] {process_utils.py:87} INFO - Sending the signal 15 to group 1989
+[2025-11-11T20:20:31.957+0000] {taskinstance.py:3092} ERROR - Received SIGTERM. Terminating subprocesses.
+[2025-11-11T20:20:31.960+0000] {subprocess.py:104} INFO - Sending SIGTERM signal to process group
+[2025-11-11T20:20:32.003+0000] {taskinstance.py:3310} ERROR - Task failed with exception
+Traceback (most recent call last):
+  File "/home/airflow/.local/lib/python3.12/site-packages/airflow/models/taskinstance.py", line 762, in _execute_task
+    result = _execute_callable(context=context, **execute_callable_kwargs)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/airflow/.local/lib/python3.12/site-packages/airflow/models/taskinstance.py", line 733, in _execute_callable
+    return ExecutionCallableRunner(
+           ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/airflow/.local/lib/python3.12/site-packages/airflow/utils/operator_helpers.py", line 252, in run
+    return self.func(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/airflow/.local/lib/python3.12/site-packages/airflow/models/baseoperator.py", line 406, in wrapper
+    return func(self, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/airflow/.local/lib/python3.12/site-packages/airflow/operators/bash.py", line 240, in execute
+    result = self.subprocess_hook.run_command(
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/airflow/.local/lib/python3.12/site-packages/airflow/hooks/subprocess.py", line 91, in run_command
+    for raw_line in iter(self.sub_process.stdout.readline, b""):
+                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/airflow/.local/lib/python3.12/site-packages/airflow/models/taskinstance.py", line 3094, in signal_handler
+    raise AirflowTaskTerminated("Task received SIGTERM signal")
+airflow.exceptions.AirflowTaskTerminated: Task received SIGTERM signal
+[2025-11-11T20:20:32.014+0000] {taskinstance.py:1225} INFO - Marking task as UP_FOR_RETRY. dag_id=unified_weather_energy_pipeline, task_id=initial_energy_history, run_id=manual__2025-11-11T20:12:38.079204+00:00, execution_date=20251111T201238, start_date=20251111T201846, end_date=20251111T202032
+[2025-11-11T20:20:32.045+0000] {taskinstance.py:340} INFO - ::group::Post task execution logs
+[2025-11-11T20:20:32.091+0000] {process_utils.py:80} INFO - Process psutil.Process(pid=1991, status='terminated', started='20:18:45') (1991) terminated with exit code None
+[2025-11-11T20:20:32.092+0000] {process_utils.py:80} INFO - Process psutil.Process(pid=1989, status='terminated', exitcode=2, started='20:18:45') (1989) terminated with exit code 2

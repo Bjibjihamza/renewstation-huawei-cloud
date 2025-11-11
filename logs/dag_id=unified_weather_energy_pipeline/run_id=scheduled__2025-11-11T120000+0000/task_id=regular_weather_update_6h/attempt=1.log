@@ -1,0 +1,101 @@
+[2025-11-11T19:05:40.833+0000] {local_task_job_runner.py:123} INFO - ::group::Pre task execution logs
+[2025-11-11T19:05:40.858+0000] {taskinstance.py:2612} INFO - Dependencies all met for dep_context=non-requeueable deps ti=<TaskInstance: unified_weather_energy_pipeline.regular_weather_update_6h scheduled__2025-11-11T12:00:00+00:00 [queued]>
+[2025-11-11T19:05:40.870+0000] {taskinstance.py:2612} INFO - Dependencies all met for dep_context=requeueable deps ti=<TaskInstance: unified_weather_energy_pipeline.regular_weather_update_6h scheduled__2025-11-11T12:00:00+00:00 [queued]>
+[2025-11-11T19:05:40.871+0000] {taskinstance.py:2865} INFO - Starting attempt 1 of 3
+[2025-11-11T19:05:40.886+0000] {taskinstance.py:2888} INFO - Executing <Task(BashOperator): regular_weather_update_6h> on 2025-11-11 12:00:00+00:00
+[2025-11-11T19:05:40.895+0000] {standard_task_runner.py:104} INFO - Running: ['airflow', 'tasks', 'run', 'unified_weather_energy_pipeline', 'regular_weather_update_6h', 'scheduled__2025-11-11T12:00:00+00:00', '--job-id', '18', '--raw', '--subdir', 'DAGS_FOLDER/weather_energy_dag.py', '--cfg-path', '/tmp/tmpvm90wutb']
+[2025-11-11T19:05:40.898+0000] {standard_task_runner.py:105} INFO - Job 18: Subtask regular_weather_update_6h
+[2025-11-11T19:05:40.899+0000] {logging_mixin.py:190} WARNING - /home/airflow/.local/lib/python3.12/site-packages/airflow/task/task_runner/standard_task_runner.py:70 DeprecationWarning: This process (pid=178) is multi-threaded, use of fork() may lead to deadlocks in the child.
+[2025-11-11T19:05:40.900+0000] {standard_task_runner.py:72} INFO - Started process 179 to run task
+[2025-11-11T19:05:40.990+0000] {task_command.py:467} INFO - Running <TaskInstance: unified_weather_energy_pipeline.regular_weather_update_6h scheduled__2025-11-11T12:00:00+00:00 [running]> on host 3962d829321f
+[2025-11-11T19:05:41.275+0000] {taskinstance.py:3131} INFO - Exporting env vars: AIRFLOW_CTX_DAG_OWNER='hamza' AIRFLOW_CTX_DAG_ID='unified_weather_energy_pipeline' AIRFLOW_CTX_TASK_ID='regular_weather_update_6h' AIRFLOW_CTX_EXECUTION_DATE='2025-11-11T12:00:00+00:00' AIRFLOW_CTX_TRY_NUMBER='1' AIRFLOW_CTX_DAG_RUN_ID='scheduled__2025-11-11T12:00:00+00:00'
+[2025-11-11T19:05:41.281+0000] {taskinstance.py:731} INFO - ::endgroup::
+[2025-11-11T19:05:41.332+0000] {subprocess.py:63} INFO - Tmp dir root location: /tmp
+[2025-11-11T19:05:41.336+0000] {subprocess.py:75} INFO - Running command: ['/usr/bin/bash', '-c', 'cd /opt/airflow && PYTHONPATH=/opt/airflow python -m src.pipeline.generator.weather_forecasting']
+[2025-11-11T19:05:41.351+0000] {subprocess.py:86} INFO - Output:
+[2025-11-11T19:05:48.313+0000] {subprocess.py:93} INFO - 
+[2025-11-11T19:05:48.314+0000] {subprocess.py:93} INFO - ================================================================================
+[2025-11-11T19:05:48.315+0000] {subprocess.py:93} INFO - 🔎 VÉRIFICATION COVERAGE HISTORIQUE 2024-01-01 00:00:00 → 2025-11-11 23:00:00
+[2025-11-11T19:05:48.316+0000] {subprocess.py:93} INFO - ================================================================================
+[2025-11-11T19:05:48.316+0000] {subprocess.py:93} INFO - 📉 Existing MIN timestamp: None
+[2025-11-11T19:05:48.317+0000] {subprocess.py:93} INFO - 📈 Existing MAX timestamp: None
+[2025-11-11T19:05:48.317+0000] {subprocess.py:93} INFO - ⚠️ Aucun historique trouvé, backfill complet…
+[2025-11-11T19:05:48.318+0000] {subprocess.py:93} INFO - 
+[2025-11-11T19:05:48.319+0000] {subprocess.py:93} INFO - ================================================================================
+[2025-11-11T19:05:48.320+0000] {subprocess.py:93} INFO - 📚 BACKFILL HISTORIQUE 2024-01-01 00:00:00 → 2025-11-11 23:00:00
+[2025-11-11T19:05:48.321+0000] {subprocess.py:93} INFO - ================================================================================
+[2025-11-11T19:05:48.322+0000] {subprocess.py:93} INFO - 📦 Fichier CSV historique créé: /opt/airflow/data/meteo_casablanca_historique_20251111_190544.csv
+[2025-11-11T19:05:48.323+0000] {subprocess.py:93} INFO - 📊 Nombre total d'heures (filtrées): 16344
+[2025-11-11T19:05:48.323+0000] {subprocess.py:93} INFO - 🕐 Période (effective): 2024-01-01 00:00 → 2025-11-11 23:00
+[2025-11-11T19:05:48.324+0000] {subprocess.py:93} INFO - 🌐 Source: Open-Meteo Historical API
+[2025-11-11T19:05:48.324+0000] {subprocess.py:93} INFO - ⚠️  Utilisation de la fonction legacy - redirection vers UPSERT
+[2025-11-11T19:05:48.325+0000] {subprocess.py:93} INFO - 🔄 Création de la table temporaire...
+[2025-11-11T19:05:48.326+0000] {subprocess.py:93} INFO - 📥 Chargement des données dans la table temporaire...
+[2025-11-11T19:05:48.328+0000] {subprocess.py:93} INFO - 🔄 Mise à jour des prévisions existantes...
+[2025-11-11T19:05:48.329+0000] {subprocess.py:93} INFO - ➕ Insertion des nouvelles prévisions...
+[2025-11-11T19:05:48.329+0000] {subprocess.py:93} INFO - 
+[2025-11-11T19:05:48.330+0000] {subprocess.py:93} INFO - ================================================================================
+[2025-11-11T19:05:48.330+0000] {subprocess.py:93} INFO - ✅ UPSERT TERMINÉ
+[2025-11-11T19:05:48.331+0000] {subprocess.py:93} INFO - 🔄 Lignes mises à jour: 0
+[2025-11-11T19:05:48.331+0000] {subprocess.py:93} INFO - ➕ Nouvelles lignes insérées: 16344
+[2025-11-11T19:05:48.332+0000] {subprocess.py:93} INFO - 📊 Total traité: 16344 lignes
+[2025-11-11T19:05:48.332+0000] {subprocess.py:93} INFO - ================================================================================
+[2025-11-11T19:05:48.333+0000] {subprocess.py:93} INFO - 
+[2025-11-11T19:05:48.334+0000] {subprocess.py:93} INFO - ================================================================================
+[2025-11-11T19:05:48.335+0000] {subprocess.py:93} INFO - 🔄 BACKFILL DES PRÉVISIONS AVEC DONNÉES RÉELLES
+[2025-11-11T19:05:48.335+0000] {subprocess.py:93} INFO - ================================================================================
+[2025-11-11T19:05:48.336+0000] {subprocess.py:93} INFO - 📍 Prévisions passées trouvées: 2024-01-01 00:00:00 → 2025-11-11 19:00:00
+[2025-11-11T19:05:48.336+0000] {subprocess.py:93} INFO - 🔄 Remplacement par données réelles...
+[2025-11-11T19:05:48.337+0000] {subprocess.py:93} INFO - 
+[2025-11-11T19:05:48.337+0000] {subprocess.py:93} INFO - ================================================================================
+[2025-11-11T19:05:48.338+0000] {subprocess.py:93} INFO - 📚 BACKFILL HISTORIQUE 2024-01-01 00:00:00 → 2025-11-11 19:00:00
+[2025-11-11T19:05:48.338+0000] {subprocess.py:93} INFO - ================================================================================
+[2025-11-11T19:05:48.338+0000] {subprocess.py:93} INFO - 📦 Fichier CSV historique créé: /opt/airflow/data/meteo_casablanca_historique_20251111_190546.csv
+[2025-11-11T19:05:48.339+0000] {subprocess.py:93} INFO - 📊 Nombre total d'heures (filtrées): 16340
+[2025-11-11T19:05:48.340+0000] {subprocess.py:93} INFO - 🕐 Période (effective): 2024-01-01 00:00 → 2025-11-11 23:00
+[2025-11-11T19:05:48.341+0000] {subprocess.py:93} INFO - 🌐 Source: Open-Meteo Historical API
+[2025-11-11T19:05:48.341+0000] {subprocess.py:93} INFO - ⚠️  Utilisation de la fonction legacy - redirection vers UPSERT
+[2025-11-11T19:05:48.342+0000] {subprocess.py:93} INFO - 🔄 Création de la table temporaire...
+[2025-11-11T19:05:48.342+0000] {subprocess.py:93} INFO - 📥 Chargement des données dans la table temporaire...
+[2025-11-11T19:05:48.343+0000] {subprocess.py:93} INFO - 🔄 Mise à jour des prévisions existantes...
+[2025-11-11T19:05:48.343+0000] {subprocess.py:93} INFO - ➕ Insertion des nouvelles prévisions...
+[2025-11-11T19:05:48.344+0000] {subprocess.py:93} INFO - 
+[2025-11-11T19:05:48.344+0000] {subprocess.py:93} INFO - ================================================================================
+[2025-11-11T19:05:48.344+0000] {subprocess.py:93} INFO - ✅ UPSERT TERMINÉ
+[2025-11-11T19:05:48.345+0000] {subprocess.py:93} INFO - 🔄 Lignes mises à jour: 16340
+[2025-11-11T19:05:48.345+0000] {subprocess.py:93} INFO - ➕ Nouvelles lignes insérées: 0
+[2025-11-11T19:05:48.345+0000] {subprocess.py:93} INFO - 📊 Total traité: 16340 lignes
+[2025-11-11T19:05:48.346+0000] {subprocess.py:93} INFO - ================================================================================
+[2025-11-11T19:05:48.347+0000] {subprocess.py:93} INFO - ✅ Backfill des prévisions terminé
+[2025-11-11T19:05:48.348+0000] {subprocess.py:93} INFO - 
+[2025-11-11T19:05:48.349+0000] {subprocess.py:93} INFO - ================================================================================
+[2025-11-11T19:05:48.350+0000] {subprocess.py:93} INFO - 🔮 PRÉVISIONS MÉTÉO CASABLANCA - 6 heures
+[2025-11-11T19:05:48.350+0000] {subprocess.py:93} INFO - ================================================================================
+[2025-11-11T19:05:48.350+0000] {subprocess.py:93} INFO - 
+[2025-11-11T19:05:48.351+0000] {subprocess.py:93} INFO - 📦 Fichier CSV prévisions créé: /opt/airflow/data/meteo_casablanca_forecast_6h_20251111_190548.csv
+[2025-11-11T19:05:48.351+0000] {subprocess.py:93} INFO - 📊 Nombre d'heures: 4 heures
+[2025-11-11T19:05:48.352+0000] {subprocess.py:93} INFO - 🕐 Période: 2025-11-11 20:00 → 2025-11-11 23:00
+[2025-11-11T19:05:48.354+0000] {subprocess.py:93} INFO - 🌐 Source: Open-Meteo Forecast API
+[2025-11-11T19:05:48.355+0000] {subprocess.py:93} INFO - ⚠️  Utilisation de la fonction legacy - redirection vers UPSERT
+[2025-11-11T19:05:48.356+0000] {subprocess.py:93} INFO - 🔄 Création de la table temporaire...
+[2025-11-11T19:05:48.356+0000] {subprocess.py:93} INFO - 📥 Chargement des données dans la table temporaire...
+[2025-11-11T19:05:48.357+0000] {subprocess.py:93} INFO - 🔄 Mise à jour des prévisions existantes...
+[2025-11-11T19:05:48.357+0000] {subprocess.py:93} INFO - ➕ Insertion des nouvelles prévisions...
+[2025-11-11T19:05:48.358+0000] {subprocess.py:93} INFO - 
+[2025-11-11T19:05:48.358+0000] {subprocess.py:93} INFO - ================================================================================
+[2025-11-11T19:05:48.359+0000] {subprocess.py:93} INFO - ✅ UPSERT TERMINÉ
+[2025-11-11T19:05:48.359+0000] {subprocess.py:93} INFO - 🔄 Lignes mises à jour: 4
+[2025-11-11T19:05:48.360+0000] {subprocess.py:93} INFO - ➕ Nouvelles lignes insérées: 0
+[2025-11-11T19:05:48.360+0000] {subprocess.py:93} INFO - 📊 Total traité: 4 lignes
+[2025-11-11T19:05:48.361+0000] {subprocess.py:93} INFO - ================================================================================
+[2025-11-11T19:05:48.362+0000] {subprocess.py:93} INFO - 
+[2025-11-11T19:05:48.363+0000] {subprocess.py:93} INFO - ================================================================================
+[2025-11-11T19:05:48.363+0000] {subprocess.py:93} INFO - ✅ SUCCÈS! Prévisions météo (6h) récupérées et chargées en DB
+[2025-11-11T19:05:48.363+0000] {subprocess.py:93} INFO - ⚠️  Ces prévisions seront remplacées par des données réelles plus tard
+[2025-11-11T19:05:48.364+0000] {subprocess.py:93} INFO - ================================================================================
+[2025-11-11T19:05:48.479+0000] {subprocess.py:97} INFO - Command exited with return code 0
+[2025-11-11T19:05:48.522+0000] {taskinstance.py:340} INFO - ::group::Post task execution logs
+[2025-11-11T19:05:48.523+0000] {taskinstance.py:352} INFO - Marking task as SUCCESS. dag_id=unified_weather_energy_pipeline, task_id=regular_weather_update_6h, run_id=scheduled__2025-11-11T12:00:00+00:00, execution_date=20251111T120000, start_date=20251111T190540, end_date=20251111T190548
+[2025-11-11T19:05:48.580+0000] {local_task_job_runner.py:266} INFO - Task exited with return code 0
+[2025-11-11T19:05:48.658+0000] {taskinstance.py:3900} INFO - 1 downstream tasks scheduled from follow-on schedule check
+[2025-11-11T19:05:48.667+0000] {local_task_job_runner.py:245} INFO - ::endgroup::
