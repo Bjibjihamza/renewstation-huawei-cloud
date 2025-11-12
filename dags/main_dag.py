@@ -4,37 +4,38 @@ import os
 
 from airflow import DAG
 from airflow.operators.bash import BashOperator
-from airflow.operators.python import BranchPythonOperator
+from airflow.operators.python import PythonOperator, ShortCircuitOperator
 from airflow.operators.empty import EmptyOperator
 
 # ============================================================================
-#   DAG AIRFLOW COMPLET - MÉTÉO + ÉNERGIE + SOLAIRE + BATTERIES
+#   DAG DE MISE À JOUR ET PRÉDICTION - EXÉCUTION RÉGULIÈRE
 # ============================================================================
 # 
-# 🎯 CE DAG GÈRE:
+# 🎯 CE DAG S'EXÉCUTE TOUTES LES 6 HEURES ET GÈRE:
 # 
-# 1️⃣ INITIAL/BACKFILL (Gaps detected):
-#    - Full historical weather (2024-01-01 → NOW) + 7-day forecast
-#    - Full historical energy consumption
-#    - Full historical solar production
-#    - Prepare prediction data (energy + solar + batteries) for next 7 days
+# 1️⃣ Backfill météo des 6 dernières heures (données réelles)
+# 2️⃣ Génération énergie des 6 dernières heures (données historiques)
+# 3️⃣ Calcul état RÉEL batteries (6h passées, is_predicted=FALSE)
+# 4️⃣ Mise à jour prévisions météo (7 jours futurs)
+# 5️⃣ Prédiction consommation énergie (7 jours futurs)
+# 6️⃣ Prédiction production solaire + batteries (7 jours futurs, is_predicted=TRUE)
 # 
-# 2️⃣ REGULAR (Recent only, every 6h):
-#    - Backfill last 6h weather with archive
-#    - Gen energy ONLY for last 6h historical
-#    - Update historical solar production (last 6h)
-#    - Update prediction data for next 7 days (weather + solar + batteries)
-# 
-# ✅ Nouveautés:
-#    - Production solaire (pvlib) intégrée
-#    - État batteries (Main 2500 kWh + Backup 700 kWh)
-#    - Historical vs Predicted modes
+# ⚠️  Ce DAG nécessite que le DAG d'initialisation ait été exécuté
 # ============================================================================
 
 def get_db_connection():
-    """Crée une connexion à la base de données PostgreSQL depuis les variables d'environnement"""
+    """Crée une connexion à la base de données PostgreSQL"""
+    # En environnement Docker, utiliser le nom du service, pas localhost
+    host = os.getenv("GAUSSDB_HOST")
+    if not host or host == "localhost":
+        # Essayer le nom du service PostgreSQL dans docker-compose
+        # Adapter selon votre configuration
+        host = os.getenv("POSTGRES_HOST", "postgres")
+    
+    print(f"🔗 Tentative de connexion à: {host}:{os.getenv('GAUSSDB_PORT', '5432')}")
+    
     return psycopg2.connect(
-        host=os.getenv("GAUSSDB_HOST", "localhost"),
+        host=host,
         port=os.getenv("GAUSSDB_PORT", "5432"),
         database=os.getenv("GAUSSDB_DB_SILVER", "silver"),
         user=os.getenv("GAUSSDB_USER", "postgres"),
@@ -42,73 +43,67 @@ def get_db_connection():
         sslmode=os.getenv("GAUSSDB_SSLMODE", "disable")
     )
 
-def check_database_initialization(**context):
+def check_initialization(**context):
     """
-    Vérifie la couverture des données de 2024-01-01 à NOW() - 6h.
-    
-    Returns:
-        str: 'initial_backfill' si gaps/missing; 'regular_recent' si couvert.
+    Vérifie que l'initialisation a été complétée.
+    Retourne True si initialisé, False sinon (ce qui arrête le DAG).
     """
     conn = None
+    cur = None
     try:
         conn = get_db_connection()
         cur = conn.cursor()
         
-        now_minus_6h = datetime.now() - timedelta(hours=6)
-        start_date = datetime(2024, 1, 1)
-        
-        # Vérifier météo
-        cur.execute("""
-            SELECT COUNT(*) 
-            FROM weather_forecast_hourly 
-            WHERE forecast_timestamp >= %s AND forecast_timestamp <= %s
-        """, (start_date, now_minus_6h))
-        weather_count = cur.fetchone()[0]
-        
-        expected_hours = int((now_minus_6h - start_date).total_seconds() / 3600)
-        
-        # Vérifier énergie
-        cur.execute("""
-            SELECT COUNT(*) 
-            FROM energy_consumption_hourly 
-            WHERE time_ts >= %s AND time_ts <= %s
-        """, (start_date, now_minus_6h))
-        energy_count = cur.fetchone()[0]
-        
-        # Vérifier production solaire historique
-        cur.execute("""
-            SELECT COUNT(*) 
-            FROM historical_solar_production 
-            WHERE production_timestamp >= %s AND production_timestamp <= %s
-        """, (start_date, now_minus_6h))
-        solar_count = cur.fetchone()[0]
-        
         print("=" * 80)
-        print("🔍 VÉRIFICATION COUVERTURE (2024-01-01 → NOW-6h)")
-        print("=" * 80)
-        print(f"📅 Période: {start_date} → {now_minus_6h} (~{expected_hours:,} heures attendues)")
-        print(f"📊 Données météo: {weather_count:,} lignes")
-        print(f"⚡ Données énergie: {energy_count:,} lignes")
-        print(f"☀️ Production solaire: {solar_count:,} lignes")
+        print("✅ Connexion à la base de données établie")
         print("=" * 80)
         
-        # Critère: >=95% coverage pour météo ET énergie
-        min_coverage = min(weather_count, energy_count)
-        coverage_pct = (min_coverage / max(expected_hours, 1)) * 100
+        # Vérifier si la table de métadonnées existe
+        cur.execute("""
+            SELECT EXISTS (
+                SELECT FROM information_schema.tables 
+                WHERE table_name = 'pipeline_metadata'
+            )
+        """)
+        table_exists = cur.fetchone()[0]
         
-        if coverage_pct < 95 or solar_count < (expected_hours * 0.9):
-            print("🚀 Gaps détectés → Mode INITIAL/BACKFILL (full)")
+        if not table_exists:
             print("=" * 80)
-            return "initial_backfill"
+            print("❌ Table pipeline_metadata n'existe pas")
+            print("⚠️  Veuillez exécuter le DAG 'initialization_pipeline' d'abord")
+            print("=" * 80)
+            return False
+        
+        # Vérifier le flag d'initialisation
+        cur.execute("""
+            SELECT value FROM pipeline_metadata 
+            WHERE key = 'initialization_complete'
+        """)
+        row = cur.fetchone()
+        
+        if row and row[0] == 'true':
+            print("=" * 80)
+            print("✅ BASE DE DONNÉES INITIALISÉE - Exécution du pipeline de mise à jour")
+            print("=" * 80)
+            return True
         else:
-            print("✅ Couverture OK → Mode REGULAR (last 6h only)")
             print("=" * 80)
-            return "regular_recent"
+            print("❌ BASE DE DONNÉES NON INITIALISÉE")
+            print("⚠️  Veuillez exécuter le DAG 'initialization_pipeline' d'abord")
+            print("=" * 80)
+            return False
             
     except Exception as e:
-        print(f"⚠️ Erreur DB check: {e} → Default to full backfill")
-        return "initial_backfill"
+        print("=" * 80)
+        print(f"❌ Erreur lors de la vérification: {e}")
+        print("⚠️  Veuillez exécuter le DAG 'initialization_pipeline' d'abord")
+        print("=" * 80)
+        import traceback
+        traceback.print_exc()
+        return False
     finally:
+        if cur:
+            cur.close()
         if conn:
             conn.close()
 
@@ -122,96 +117,35 @@ default_args = {
 }
 
 with DAG(
-    dag_id="weather_energy_solar_battery_pipeline",
-    description="Pipeline complet: Weather + Energy + Solar Production + Battery State",
+    dag_id="update_and_prediction_pipeline",
+    description="Mise à jour 6h + Prédictions 7 jours (nécessite initialisation)",
     default_args=default_args,
     start_date=datetime(2025, 11, 11),
-    schedule_interval="0 */6 * * *",  # Every 6h
+    schedule_interval="0 */6 * * *",  # Toutes les 6 heures
     catchup=False,
     max_active_runs=1,
-    tags=["renewstation", "complete_pipeline", "solar", "batteries"],
+    tags=["renewstation", "update", "prediction", "regular"],
 ) as dag:
 
     # ========================================================================
-    #   BRANCHEMENT: FULL BACKFILL vs RECENT 6H
+    #   VÉRIFICATION PRÉALABLE
     # ========================================================================
     
-    check_mode = BranchPythonOperator(
-        task_id="check_database_coverage",
-        python_callable=check_database_initialization,
+    check_init = ShortCircuitOperator(
+        task_id="check_initialization",
+        python_callable=check_initialization,
         provide_context=True,
     )
-
+    
+    start_update = EmptyOperator(task_id="start_update")
+    
     # ========================================================================
-    #   BRANCHE 1: INITIAL/BACKFILL (Gaps detected)
-    # ========================================================================
-    
-    initial_backfill = EmptyOperator(task_id="initial_backfill")
-    
-    # 1. Full historical weather (2024-01-01 → NOW) + 7-day forecast
-    full_weather_backfill = BashOperator(
-        task_id="full_weather_backfill",
-        bash_command=(
-            "cd /opt/airflow && "
-            "PYTHONPATH=/opt/airflow "
-            "python -m src.pipeline.generator.weather_forecasting --mode full"
-        ),
-        execution_timeout=timedelta(minutes=30),
-    )
-    
-    # 2. Full historical energy consumption
-    full_energy_backfill = BashOperator(
-        task_id="full_energy_backfill",
-        bash_command=(
-            "cd /opt/airflow && "
-            "PYTHONPATH=/opt/airflow "
-            "python -m src.pipeline.generator.energy_cons_generator --mode full"
-        ),
-        execution_timeout=timedelta(minutes=45),
-    )
-    
-    # 3. Full historical solar production
-    full_solar_historical = BashOperator(
-        task_id="full_solar_production_historical",
-        bash_command=(
-            "cd /opt/airflow && "
-            "PYTHONPATH=/opt/airflow "
-            "python -m src.pipeline.generator.solar_battery --mode historical"
-        ),
-        execution_timeout=timedelta(minutes=30),
-    )
-    
-    # 4. Prepare prediction data (energy consumption for next 7 days)
-    full_prepare_energy_predictions = BashOperator(
-        task_id="full_prepare_energy_predictions",
-        bash_command=(
-            "cd /opt/airflow && "
-            "PYTHONPATH=/opt/airflow "
-            "python -m src.pipeline.generator.prediction"
-        ),
-        execution_timeout=timedelta(minutes=10),
-    )
-    
-    # 5. Calculate predicted solar production & battery state (next 7 days)
-    full_solar_battery_predicted = BashOperator(
-        task_id="full_solar_battery_predicted",
-        bash_command=(
-            "cd /opt/airflow && "
-            "PYTHONPATH=/opt/airflow "
-            "python -m src.pipeline.generator.solar_battery --mode predicted"
-        ),
-        execution_timeout=timedelta(minutes=15),
-    )
-
-    # ========================================================================
-    #   BRANCHE 2: REGULAR RECENT (Every 6h, Last 6h Only)
+    #   PARTIE 1: MISE À JOUR DONNÉES HISTORIQUES (6H)
     # ========================================================================
     
-    regular_recent = EmptyOperator(task_id="regular_recent")
-    
-    # 1. Backfill last 6h weather with archive
+    # 1. Backfill météo des 6 dernières heures avec archive
     recent_weather_backfill = BashOperator(
-        task_id="recent_weather_backfill_6h",
+        task_id="weather_backfill_6h",
         bash_command=(
             "cd /opt/airflow && "
             "PYTHONPATH=/opt/airflow "
@@ -220,9 +154,9 @@ with DAG(
         execution_timeout=timedelta(minutes=5),
     )
     
-    # 2. Gen energy ONLY for last 6h historical
+    # 2. Génération énergie pour les 6 dernières heures
     recent_energy_backfill = BashOperator(
-        task_id="recent_energy_backfill_6h",
+        task_id="energy_backfill_6h",
         bash_command=(
             "cd /opt/airflow && "
             "PYTHONPATH=/opt/airflow "
@@ -231,20 +165,40 @@ with DAG(
         execution_timeout=timedelta(minutes=10),
     )
     
-    # 3. Update historical solar production (last 6h)
-    recent_solar_historical = BashOperator(
-        task_id="recent_solar_production_historical_6h",
+    # 3. Calcul état RÉEL batteries (6h passées, is_predicted=FALSE)
+    recent_solar_battery_real = BashOperator(
+        task_id="solar_battery_real_6h",
         bash_command=(
             "cd /opt/airflow && "
             "PYTHONPATH=/opt/airflow "
-            "python -m src.pipeline.generator.solar_battery --mode historical"
+            "python -m src.pipeline.generator.solar_battery --mode recent"
         ),
         execution_timeout=timedelta(minutes=10),
     )
     
-    # 4. Update prediction data (energy consumption for next 7 days)
-    recent_prepare_energy_predictions = BashOperator(
-        task_id="recent_prepare_energy_predictions",
+    historical_complete = EmptyOperator(
+        task_id="historical_update_complete",
+        trigger_rule="none_failed",
+    )
+    
+    # ========================================================================
+    #   PARTIE 2: PRÉDICTIONS (7 JOURS FUTURS)
+    # ========================================================================
+    
+    # 4. Mise à jour prévisions météo (7 jours futurs)
+    update_weather_forecast = BashOperator(
+        task_id="weather_forecast_7d",
+        bash_command=(
+            "cd /opt/airflow && "
+            "PYTHONPATH=/opt/airflow "
+            "python -m src.pipeline.generator.weather_forecasting --mode full"
+        ),
+        execution_timeout=timedelta(minutes=5),
+    )
+    
+    # 5. Prédiction consommation énergie (7 jours futurs)
+    predict_energy_consumption = BashOperator(
+        task_id="predict_energy_7d",
         bash_command=(
             "cd /opt/airflow && "
             "PYTHONPATH=/opt/airflow "
@@ -253,9 +207,9 @@ with DAG(
         execution_timeout=timedelta(minutes=10),
     )
     
-    # 5. Update predicted solar production & battery state (next 7 days)
-    recent_solar_battery_predicted = BashOperator(
-        task_id="recent_solar_battery_predicted",
+    # 6. Prédiction production solaire + batteries (7 jours futurs, is_predicted=TRUE)
+    predict_solar_battery = BashOperator(
+        task_id="predict_solar_battery_7d",
         bash_command=(
             "cd /opt/airflow && "
             "PYTHONPATH=/opt/airflow "
@@ -263,104 +217,70 @@ with DAG(
         ),
         execution_timeout=timedelta(minutes=15),
     )
-
+    
+    predictions_complete = EmptyOperator(
+        task_id="predictions_complete",
+        trigger_rule="none_failed",
+    )
+    
     # ========================================================================
-    #   CONVERGENCE
+    #   FINALISATION
     # ========================================================================
     
     pipeline_complete = EmptyOperator(
         task_id="pipeline_complete",
         trigger_rule="none_failed_min_one_success",
     )
-
+    
     # ========================================================================
-    #   DÉPENDANCES - BRANCHE 1: INITIAL/BACKFILL
-    # ========================================================================
-    
-    # Weather doit être fait en premier (tout dépend de lui)
-    initial_backfill >> full_weather_backfill
-    
-    # Une fois weather OK, on peut faire en parallèle:
-    # - Energy historical (dépend de weather)
-    # - Solar historical (dépend de weather)
-    # - Energy predictions (dépend de weather forecast)
-    full_weather_backfill >> [
-        full_energy_backfill,
-        full_solar_historical,
-        full_prepare_energy_predictions
-    ]
-    
-    # Une fois energy predictions prêtes, on peut faire solar+battery predictions
-    full_prepare_energy_predictions >> full_solar_battery_predicted
-    
-    # Tous convergent vers completion
-    [
-        full_energy_backfill,
-        full_solar_historical,
-        full_solar_battery_predicted
-    ] >> pipeline_complete
-
-    # ========================================================================
-    #   DÉPENDANCES - BRANCHE 2: REGULAR RECENT
+    #   DÉPENDANCES
     # ========================================================================
     
-    # Weather en premier
-    regular_recent >> recent_weather_backfill
+    # Vérification puis démarrage
+    check_init >> start_update
     
-    # Parallèle après weather:
-    # - Energy historical 6h
-    # - Solar historical 6h
-    # - Energy predictions update
-    recent_weather_backfill >> [
-        recent_energy_backfill,
-        recent_solar_historical,
-        recent_prepare_energy_predictions
-    ]
+    # PARTIE 1: Mise à jour historique (parallèle après météo)
+    start_update >> recent_weather_backfill
+    recent_weather_backfill >> [recent_energy_backfill, recent_solar_battery_real]
+    [recent_energy_backfill, recent_solar_battery_real] >> historical_complete
     
-    # Une fois energy predictions updated, faire solar+battery predictions
-    recent_prepare_energy_predictions >> recent_solar_battery_predicted
+    # PARTIE 2: Prédictions (séquentiel)
+    historical_complete >> update_weather_forecast
+    update_weather_forecast >> predict_energy_consumption
+    predict_energy_consumption >> predict_solar_battery
+    predict_solar_battery >> predictions_complete
     
-    # Convergence
-    [
-        recent_energy_backfill,
-        recent_solar_historical,
-        recent_solar_battery_predicted
-    ] >> pipeline_complete
-
-    # ========================================================================
-    #   BRANCHEMENT INITIAL
-    # ========================================================================
-    
-    check_mode >> [initial_backfill, regular_recent]
+    # Finalisation
+    predictions_complete >> pipeline_complete
 
 
 # ============================================================================
-#   NOTES D'IMPLÉMENTATION
+#   NOTES D'UTILISATION
 # ============================================================================
 # 
-# 📁 Structure fichiers attendue:
-#    src/pipeline/generator/
-#    ├── weather_forecasting.py          (existe)
-#    ├── energy_cons_generator.py        (existe)
-#    ├── backfill_energy_last_6h.py      (existe)
-#    ├── prediction.py                   (existe)
-#    └── solar_battery.py     (NOUVEAU - à créer)
+# 📋 Ce DAG s'exécute automatiquement toutes les 6 heures
 # 
-# 🔋 Tables créées:
-#    - predicted_solar_production         (7 jours futurs)
-#    - historical_solar_production        (passé réel)
-#    - predicted_battery_state            (7 jours futurs - main + backup)
-#    - historical_battery_state           (passé réel - main + backup)
+# ⚠️  PRÉREQUIS: Le DAG 'initialization_pipeline' doit avoir été exécuté
 # 
-# ⚡ Flux de données:
-#    weather_forecast_hourly
-#         ↓
-#    [pvlib calculation]
-#         ↓
-#    predicted_solar_production → predicted_battery_state
-#    historical_solar_production → historical_battery_state
-#         ↑
-#    predicted_energy_consumption (sum all buildings)
-#    energy_consumption_hourly (sum all buildings)
+# 🔄 Flux d'exécution:
+#    1. Vérification de l'initialisation
+#    2. Si OK: Mise à jour des 6h passées (météo + énergie + batteries réelles)
+#    3. Puis: Prédictions pour les 7 jours futurs (météo + énergie + batteries)
+#    4. Si KO: Le DAG s'arrête immédiatement
+# 
+# 📊 Tables mises à jour:
+#    - weather_forecast_hourly (backfill 6h + forecast 7j)
+#    - energy_consumption_hourly (backfill 6h)
+#    - predicted_energy_consumption (forecast 7j)
+#    - predicted_solar_production (forecast 7j)
+#    - battery_state (backfill 6h avec is_predicted=FALSE + forecast 7j avec is_predicted=TRUE)
+#
+# 🔧 Configuration requise:
+#    Variables d'environnement à définir:
+#    - GAUSSDB_HOST ou POSTGRES_HOST (nom du service PostgreSQL)
+#    - GAUSSDB_PORT (par défaut: 5432)
+#    - GAUSSDB_DB_SILVER (par défaut: silver)
+#    - GAUSSDB_USER (par défaut: postgres)
+#    - GAUSSDB_PASSWORD (par défaut: postgres)
 # 
 # ============================================================================
