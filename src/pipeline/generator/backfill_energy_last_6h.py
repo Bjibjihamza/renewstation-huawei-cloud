@@ -37,9 +37,9 @@ np.random.seed(42)
 # Define how many buildings of each type to generate
 building_counts = {
     "Hospital": 1,
-    "House": 15,
-    "Industry": 3,
-    "Office": 4,
+    "House": 10,
+    "Industry": 2,
+    "Office": 3,
     "School": 1,
 }
 

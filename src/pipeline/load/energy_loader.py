@@ -31,11 +31,33 @@ def get_db_connection():
     )
 
 
+def generate_energy_id(timestamp, building):
+    """
+    Génère un ID unique au format YYYYMMDDHH_BuildingName
+    Exemple: 2024010108_Hospital, 2024010108_House1
+    
+    Args:
+        timestamp: datetime object, Timestamp pandas, ou string
+        building: nom du bâtiment (str)
+    
+    Returns:
+        str: ID unique au format YYYYMMDDHH_BuildingName
+    """
+    if isinstance(timestamp, str):
+        timestamp = pd.to_datetime(timestamp)
+    
+    # Format: YYYYMMDDHH
+    date_part = timestamp.strftime('%Y%m%d%H')
+    
+    return f"{date_part}_{building}"
+
+
 def upsert_energy_consumption_to_db(df: pd.DataFrame):
     """
     UPSERT (UPDATE + INSERT) du DataFrame dans energy_consumption_hourly.
     
     Logique:
+    - Génère automatiquement l'ID unique (YYYYMMDDHH_BuildingName)
     - Si (time_ts, building) existe déjà → UPDATE
     - Sinon → INSERT
     
@@ -67,8 +89,24 @@ def upsert_energy_consumption_to_db(df: pd.DataFrame):
         'Use [kW]': 'use_kw',
     })
 
-    # 2) Colonnes dans l'ordre de la table SQL
+    # 2) Générer l'ID unique (YYYYMMDDHH_building) pour chaque ligne
+    print("🔑 Génération des IDs uniques...")
+    
+    # Convertir time_ts en datetime si ce n'est pas déjà fait
+    df_db['time_ts'] = pd.to_datetime(df_db['time_ts'])
+    
+    # Générer l'ID avec la fonction
+    df_db['id'] = df_db.apply(
+        lambda row: generate_energy_id(row['time_ts'], row['building']),
+        axis=1
+    )
+    
+    # Afficher quelques exemples
+    print(f"📋 Exemples d'IDs générés: {df_db['id'].head(3).tolist()}")
+
+    # 3) Colonnes dans l'ordre de la table SQL (id en premier)
     cols = [
+        'id',
         'time_ts',
         'building',
         'winter_flag',
@@ -97,10 +135,11 @@ def upsert_energy_consumption_to_db(df: pd.DataFrame):
     cur = conn.cursor()
 
     try:
-        # 3) Créer une table temporaire
+        # 4) Créer une table temporaire (incluant 'id')
         print("🔄 Création de la table temporaire...")
         cur.execute("""
             CREATE TEMP TABLE temp_energy_consumption (
+                id                     VARCHAR(50)    NOT NULL,
                 time_ts                TIMESTAMP      NOT NULL,
                 building               VARCHAR(50)    NOT NULL,
                 winter_flag            SMALLINT       NOT NULL,
@@ -125,13 +164,14 @@ def upsert_energy_consumption_to_db(df: pd.DataFrame):
             )
         """)
 
-        # 4) Charger les données dans la table temporaire via COPY
+        # 5) Charger les données dans la table temporaire via COPY
         buffer = StringIO()
         df_db.to_csv(buffer, index=False, header=False)
         buffer.seek(0)
 
         copy_sql = """
         COPY temp_energy_consumption (
+            id,
             time_ts,
             building,
             winter_flag,
@@ -160,11 +200,12 @@ def upsert_energy_consumption_to_db(df: pd.DataFrame):
         print("📥 Chargement des données dans la table temporaire...")
         cur.copy_expert(copy_sql, buffer)
 
-        # 5) UPDATE des enregistrements existants
+        # 6) UPDATE des enregistrements existants (par time_ts + building)
         print("🔄 Mise à jour des enregistrements existants...")
         update_sql = """
         UPDATE energy_consumption_hourly ec
         SET 
+            id = t.id,
             winter_flag = t.winter_flag,
             spring_flag = t.spring_flag,
             summer_flag = t.summer_flag,
@@ -191,10 +232,11 @@ def upsert_energy_consumption_to_db(df: pd.DataFrame):
         cur.execute(update_sql)
         updated_count = cur.rowcount
 
-        # 6) INSERT des nouveaux enregistrements
+        # 7) INSERT des nouveaux enregistrements (incluant 'id')
         print("➕ Insertion des nouveaux enregistrements...")
         insert_sql = """
         INSERT INTO energy_consumption_hourly (
+            id,
             time_ts,
             building,
             winter_flag,
@@ -218,6 +260,7 @@ def upsert_energy_consumption_to_db(df: pd.DataFrame):
             use_kw
         )
         SELECT 
+            t.id,
             t.time_ts,
             t.building,
             t.winter_flag,
@@ -250,7 +293,7 @@ def upsert_energy_consumption_to_db(df: pd.DataFrame):
         cur.execute(insert_sql)
         inserted_count = cur.rowcount
 
-        # 7) Commit
+        # 8) Commit
         conn.commit()
 
         print("\n" + "=" * 80)
@@ -258,11 +301,14 @@ def upsert_energy_consumption_to_db(df: pd.DataFrame):
         print(f"🔄 Lignes mises à jour: {updated_count}")
         print(f"➕ Nouvelles lignes insérées: {inserted_count}")
         print(f"📊 Total traité: {len(df_db)} lignes")
+        print(f"🔑 Format ID: YYYYMMDDHH_BuildingName")
         print("=" * 80)
 
     except Exception as e:
         conn.rollback()
         print(f"\n❌ ERREUR lors de l'UPSERT: {e}")
+        import traceback
+        traceback.print_exc()
         raise
     finally:
         cur.close()

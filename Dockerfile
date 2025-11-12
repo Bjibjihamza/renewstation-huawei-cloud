@@ -16,11 +16,15 @@ RUN apt-get update && \
 # Repasser en utilisateur airflow
 USER airflow
 
+# Mettre à jour pip d'abord (optionnel, fixe le notice)
+RUN pip install --upgrade pip
+
 # Installer les dépendances Python
 RUN pip install --no-cache-dir \
     pandas==2.1.4 \
     requests==2.31.0 \
     psycopg2-binary==2.9.9 \
-    python-dotenv==1.0.0
+    python-dotenv==1.0.0 \
+    pvlib==0.13.1  # Updated to latest stable
 
 # Le reste est géré par docker-compose (volumes, env vars, etc.)
