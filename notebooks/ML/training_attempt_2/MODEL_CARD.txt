@@ -1,0 +1,171 @@
+
+======================================================================
+ENERGY CONSUMPTION FORECASTING MODEL - MODEL CARD
+======================================================================
+
+Model Name: Improved_GRU
+Created: 2025-11-12 01:03:32
+
+======================================================================
+MODEL ARCHITECTURE
+======================================================================
+
+Type: Improved GRU
+Input Shape: (24 timesteps, 42 features)
+Lookback Window: 24 hours
+Output: Next hour energy consumption (kW)
+
+Layers:
+- Layer 1: GRU(64) + BatchNorm + Dropout(0.3)
+- Layer 2: GRU(32) + BatchNorm + Dropout(0.3)
+- Layer 3: Dense(16) + Dropout(0.2)
+- Output: Dense(1)
+
+Regularization:
+- L2 regularization (0.01) on all layers
+- Dropout (0.3 on recurrent, 0.2 on dense)
+- Batch normalization
+- Early stopping (patience=10)
+
+Total Parameters: 31,073
+
+======================================================================
+PERFORMANCE METRICS (Test Set)
+======================================================================
+
+RMSE (Root Mean Squared Error): 7.19 kW
+MAE (Mean Absolute Error):      4.94 kW
+MAPE (Mean Absolute % Error):   200.41%
+R² Score:                        0.0137
+
+Validation Loss (Best):          0.906196
+
+======================================================================
+CONFIDENCE INTERVALS
+======================================================================
+
+95% Confidence Interval: ±14.05 kW
+Residual Mean: 0.60 kW
+Residual Std:  7.17 kW
+
+Physical Bounds:
+- Minimum: 0.45 kW
+- Maximum: 33.48 kW
+
+======================================================================
+TRAINING DETAILS
+======================================================================
+
+Training Samples: 134,530
+Validation Samples: 33,614
+Test Samples: 42,024
+
+Training Period: 2023-01-01 to 2023-08-22
+Test Period: 2023-10-20 to 2023-12-31
+
+Epochs Trained: 15
+Batch Size: 64
+Learning Rate: 0.0005 (with ReduceLROnPlateau)
+
+======================================================================
+FEATURES (42)
+======================================================================
+
+ 1. winter_flag
+ 2. spring_flag
+ 3. summer_flag
+ 4. fall_flag
+ 5. outdoor_temp_c
+ 6. humidity_pct
+ 7. cloud_cover_pct
+ 8. solar_radiation_w_m2
+ 9. hour_of_day
+10. day_of_week
+11. month_num
+12. day_of_year
+13. is_weekend
+14. is_holiday
+15. is_peak_hour
+16. lighting_kw
+17. hvac_kw
+18. special_equipment_kw
+19. building_Hospital
+20. building_House1
+21. building_House10
+22. building_House11
+23. building_House12
+24. building_House13
+25. building_House14
+26. building_House15
+27. building_House2
+28. building_House3
+29. building_House4
+30. building_House5
+31. building_House6
+32. building_House7
+33. building_House8
+34. building_House9
+35. building_Industry1
+36. building_Industry2
+37. building_Industry3
+38. building_Office1
+39. building_Office2
+40. building_Office3
+41. building_Office4
+42. building_School
+
+======================================================================
+FILES
+======================================================================
+
+Model File:     FINAL_Improved_GRU_energy_model.keras
+Artifacts:      FINAL_Improved_GRU_artifacts.pkl
+History:        FINAL_Improved_GRU_history.pkl
+Documentation:  MODEL_CARD.txt
+
+======================================================================
+USAGE EXAMPLE
+======================================================================
+
+from tensorflow.keras.models import load_model
+import pickle
+
+# Load model
+model = load_model('FINAL_Improved_GRU_energy_model.keras')
+
+# Load artifacts
+with open('FINAL_Improved_GRU_artifacts.pkl', 'rb') as f:
+    artifacts = pickle.load(f)
+
+# Get scalers
+feature_scaler = artifacts['feature_scaler']
+target_scaler = artifacts['target_scaler']
+
+# Make prediction (requires last 24 hours of data)
+X_input = feature_scaler.transform(recent_data)
+X_seq = X_input.reshape(1, 24, 42)
+y_pred_scaled = model.predict(X_seq)
+y_pred = target_scaler.inverse_transform(y_pred_scaled)
+
+# Add confidence interval
+margin = artifacts['confidence_intervals']['margin_95']
+lower_bound = y_pred - margin
+upper_bound = y_pred + margin
+
+print(f"Prediction: {y_pred[0][0]:.2f} kW")
+print(f"95% CI: [{lower_bound[0][0]:.2f}, {upper_bound[0][0]:.2f}] kW")
+
+======================================================================
+NOTES
+======================================================================
+
+- Model predicts 1 hour ahead
+- Requires exactly 24 hours of historical data
+- All features must be scaled using the saved feature_scaler
+- Predictions should be inverse-transformed using target_scaler
+- Consider physical bounds when making predictions
+- Monitor prediction confidence intervals
+
+======================================================================
+END OF MODEL CARD
+======================================================================
