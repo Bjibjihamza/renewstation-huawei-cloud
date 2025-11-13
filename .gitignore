@@ -1,7 +1,29 @@
-# Environment configuration
-.env
-.env.cloud
-logs/
-
+# Python caches
 __pycache__/
 *.pyc
+*.pyo
+*.pyd
+
+# Node.js / Frontend
+node_modules/
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Logs et temp
+logs/
+*.log
+
+# Notebooks et outputs
+notebooks/*.csv
+notebooks/*.png
+notebooks/rapports/
+
+# IDE et OS
+.DS_Store
+.vscode/
+.idea/
