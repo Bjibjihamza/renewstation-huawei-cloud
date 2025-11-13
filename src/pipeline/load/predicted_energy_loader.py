@@ -5,44 +5,52 @@ import pandas as pd
 
 def load_predicted_energy_consumption_to_db(
     df: pd.DataFrame,
-    target_table: str = "predicted_energy_consumption_hourly"  # 👈 changé ici
+    target_table: str = "predicted_energy_consumption_hourly"
 ):
-    df_db = df.rename(columns={
-        'Time': 'time_ts',
-        'Building': 'building',
-        'Outdoor Temp (°C)': 'outdoor_temp_c',
-        'Humidity (%)': 'humidity_pct',
-        'Cloud Cover (%)': 'cloud_cover_pct',
-        'Solar Radiation (W/m²)': 'solar_radiation_w_m2',
-        'Lighting [kW]': 'lighting_kw',
-        'HVAC [kW]': 'hvac_kw',
-        'Special Equipment [kW]': 'special_equipment_kw',
-        'Use [kW]': 'use_kw',
-        'Winter': 'winter_flag',
-        'Spring': 'spring_flag',
-        'Summer': 'summer_flag',
-        'Fall': 'fall_flag',
-        'Hour': 'hour_of_day',
-        'DayOfWeek': 'day_of_week',
-        'Month': 'month_num',
-        'DayOfYear': 'day_of_year',
-        'IsWeekend': 'is_weekend',
-        'IsHoliday': 'is_holiday',
-        'IsPeakHour': 'is_peak_hour',
-    })
+    """
+    Version compatible avec le modèle ML (energy_prediction_7d.py)
+    Le DataFrame contient maintenant :
+    - time_ts
+    - building
+    - use_kw
+    - toutes les features (temp, humidity, etc.)
+    → Plus de colonnes lighting_kw, hvac_kw, special_equipment_kw
+    """
+    # Colonnes attendues par la table
+    expected_cols = [
+        'time_ts', 'building', 'use_kw',
+        'outdoor_temp_c', 'humidity_pct', 'cloud_cover_pct', 'solar_radiation_w_m2',
+        'hour_of_day', 'day_of_week', 'month_num', 'day_of_year',
+        'is_weekend', 'is_holiday', 'is_peak_hour',
+        'winter_flag', 'spring_flag', 'summer_flag', 'fall_flag'
+    ]
 
-    df_db['id'] = df_db['time_ts'].dt.strftime('%Y%m%d%H') + '_' + df_db['building']
+    # On garde seulement les colonnes présentes
+    df_db = df.copy()
     df_db['time_ts'] = pd.to_datetime(df_db['time_ts'])
 
-    cols = [col.lower() for col in [
+    # Créer l'ID unique
+    df_db['id'] = df_db['time_ts'].dt.strftime('%Y%m%d%H') + '_' + df_db['building']
+
+    # Remplir les colonnes manquantes avec NULL (ex: lighting_kw, hvac_kw → plus calculées)
+    # → La table accepte NULL sur ces colonnes
+    missing_cols = ['lighting_kw', 'hvac_kw', 'special_equipment_kw']
+    for col in missing_cols:
+        if col not in df_db.columns:
+            df_db[col] = None
+
+    # Ordre final exact
+    final_cols = [
         'id', 'time_ts', 'building',
         'winter_flag', 'spring_flag', 'summer_flag', 'fall_flag',
         'outdoor_temp_c', 'humidity_pct', 'cloud_cover_pct', 'solar_radiation_w_m2',
         'hour_of_day', 'day_of_week', 'month_num', 'day_of_year',
         'is_weekend', 'is_holiday', 'is_peak_hour',
         'lighting_kw', 'hvac_kw', 'special_equipment_kw', 'use_kw'
-    ]]
-    df_db = df_db[cols]
+    ]
+
+    # Réorganiser
+    df_db = df_db[final_cols]
 
     conn = get_db_connection()
     cur = conn.cursor()
@@ -51,23 +59,26 @@ def load_predicted_energy_consumption_to_db(
         cur.execute(f"CREATE TEMP TABLE temp_pred (LIKE {target_table} INCLUDING ALL) ON COMMIT DROP")
 
         buffer = StringIO()
-        df_db.to_csv(buffer, index=False, header=False)
+        df_db.to_csv(buffer, index=False, header=False, na_rep='NULL')
         buffer.seek(0)
-        cur.copy_expert(f"COPY temp_pred FROM STDIN WITH (FORMAT csv)", buffer)
+
+        cur.copy_expert(f"COPY temp_pred FROM STDIN WITH (FORMAT csv, NULL 'NULL')", buffer)
 
         cur.execute(f"""
             INSERT INTO {target_table}
             SELECT * FROM temp_pred
             ON CONFLICT (time_ts, building) DO UPDATE SET
                 use_kw = EXCLUDED.use_kw,
-                lighting_kw = EXCLUDED.lighting_kw,
-                hvac_kw = EXCLUDED.hvac_kw,
-                special_equipment_kw = EXCLUDED.special_equipment_kw
+                outdoor_temp_c = EXCLUDED.outdoor_temp_c,
+                humidity_pct = EXCLUDED.humidity_pct,
+                cloud_cover_pct = EXCLUDED.cloud_cover_pct,
+                solar_radiation_w_m2 = EXCLUDED.solar_radiation_w_m2
         """)
         conn.commit()
-        print(f"{len(df_db)} lignes insérées dans {target_table}")
+        print(f"{len(df_db)} prédictions ML chargées dans {target_table} (IA ±149 W)")
     except Exception as e:
         conn.rollback()
+        print(f"ERREUR lors du chargement : {e}")
         raise e
     finally:
         cur.close()

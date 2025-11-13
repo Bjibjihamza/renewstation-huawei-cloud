@@ -18,9 +18,19 @@ app.use(express.json());
 app.use(morgan('dev'));
 
 // Health check endpoint
-// Health check endpoint – obligatoire pour Docker
+// =========================================
+// HEALTH CHECK – obligatoire pour Docker
+// =========================================
+// Health check endpoint
+// =========================================
+// HEALTH CHECK – obligatoire pour Docker
+// =========================================
 app.get('/health', (req, res) => {
-  res.status(200).json({ status: 'OK', timestamp: new Date().toISOString() });
+  res.status(200).json({
+    status: 'OK',
+    uptime: process.uptime(),
+    timestamp: new Date().toISOString()
+  });
 });
 
 // Import routes
