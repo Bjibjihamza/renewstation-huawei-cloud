@@ -17738,3 +17738,560 @@ File Path                                       PID    Runtime      # DAGs    # 
 /opt/airflow/dags/daily_prediction_pipeline.py                           1           0  0.19s           2025-11-13T16:25:56                      12
 /opt/airflow/dags/initialization_pipeline.py                             1           0  0.16s           2025-11-13T16:25:56                      10
 ================================================================================
+[2025-11-13T20:37:45.949+0000] {manager.py:483} INFO - Processing files using up to 2 processes at a time 
+[2025-11-13T20:37:45.952+0000] {manager.py:484} INFO - Process each file at most once every 30 seconds
+[2025-11-13T20:37:45.954+0000] {manager.py:485} INFO - Checking for new files in /opt/airflow/dags every 300 seconds
+[2025-11-13T20:37:45.956+0000] {manager.py:821} INFO - Searching for files in /opt/airflow/dags
+[2025-11-13T20:37:46.125+0000] {manager.py:824} INFO - There are 2 files in /opt/airflow/dags
+[2025-11-13T20:37:46.563+0000] {manager.py:997} INFO - 
+================================================================================
+DAG File Processing Stats
+
+File Path                                         PID  Runtime      # DAGs    # Errors  Last Runtime    Last Run      Last # of DB Queries
+----------------------------------------------  -----  ---------  --------  ----------  --------------  ----------  ----------------------
+/opt/airflow/dags/daily_prediction_pipeline.py    187  0.27s             0           0                                                   0
+/opt/airflow/dags/initialization_pipeline.py      190  0.13s             0           0                                                   0
+================================================================================
+[2025-11-13T20:38:17.233+0000] {manager.py:997} INFO - 
+================================================================================
+DAG File Processing Stats
+
+File Path                                       PID    Runtime      # DAGs    # Errors  Last Runtime    Last Run               Last # of DB Queries
+----------------------------------------------  -----  ---------  --------  ----------  --------------  -------------------  ----------------------
+/opt/airflow/dags/daily_prediction_pipeline.py                           1           0  1.64s           2025-11-13T20:37:47                      45
+/opt/airflow/dags/initialization_pipeline.py                             1           0  1.46s           2025-11-13T20:37:47                      43
+================================================================================
+[2025-11-13T20:38:48.144+0000] {manager.py:997} INFO - 
+================================================================================
+DAG File Processing Stats
+
+File Path                                       PID    Runtime      # DAGs    # Errors  Last Runtime    Last Run               Last # of DB Queries
+----------------------------------------------  -----  ---------  --------  ----------  --------------  -------------------  ----------------------
+/opt/airflow/dags/daily_prediction_pipeline.py                           1           0  0.41s           2025-11-13T20:38:18                      12
+/opt/airflow/dags/initialization_pipeline.py                             1           0  0.35s           2025-11-13T20:38:18                      10
+================================================================================
+[2025-11-13T20:39:18.558+0000] {manager.py:997} INFO - 
+================================================================================
+DAG File Processing Stats
+
+File Path                                       PID    Runtime      # DAGs    # Errors  Last Runtime    Last Run               Last # of DB Queries
+----------------------------------------------  -----  ---------  --------  ----------  --------------  -------------------  ----------------------
+/opt/airflow/dags/daily_prediction_pipeline.py                           1           0  0.37s           2025-11-13T20:38:49                      12
+/opt/airflow/dags/initialization_pipeline.py                             1           0  0.34s           2025-11-13T20:38:49                      10
+================================================================================
+[2025-11-13T20:39:49.484+0000] {manager.py:997} INFO - 
+================================================================================
+DAG File Processing Stats
+
+File Path                                       PID    Runtime      # DAGs    # Errors  Last Runtime    Last Run               Last # of DB Queries
+----------------------------------------------  -----  ---------  --------  ----------  --------------  -------------------  ----------------------
+/opt/airflow/dags/daily_prediction_pipeline.py                           1           0  0.32s           2025-11-13T20:39:19                      12
+/opt/airflow/dags/initialization_pipeline.py                             1           0  0.27s           2025-11-13T20:39:19                      10
+================================================================================
+[2025-11-13T20:40:19.917+0000] {manager.py:997} INFO - 
+================================================================================
+DAG File Processing Stats
+
+File Path                                       PID    Runtime      # DAGs    # Errors  Last Runtime    Last Run               Last # of DB Queries
+----------------------------------------------  -----  ---------  --------  ----------  --------------  -------------------  ----------------------
+/opt/airflow/dags/daily_prediction_pipeline.py                           1           0  0.44s           2025-11-13T20:39:50                      12
+/opt/airflow/dags/initialization_pipeline.py                             1           0  0.38s           2025-11-13T20:39:50                      10
+================================================================================
+[2025-11-13T20:40:50.912+0000] {manager.py:997} INFO - 
+================================================================================
+DAG File Processing Stats
+
+File Path                                       PID    Runtime      # DAGs    # Errors  Last Runtime    Last Run               Last # of DB Queries
+----------------------------------------------  -----  ---------  --------  ----------  --------------  -------------------  ----------------------
+/opt/airflow/dags/daily_prediction_pipeline.py                           1           0  0.28s           2025-11-13T20:40:21                      12
+/opt/airflow/dags/initialization_pipeline.py                             1           0  0.27s           2025-11-13T20:40:21                      10
+================================================================================
+[2025-11-13T20:41:21.021+0000] {manager.py:997} INFO - 
+================================================================================
+DAG File Processing Stats
+
+File Path                                       PID    Runtime      # DAGs    # Errors  Last Runtime    Last Run               Last # of DB Queries
+----------------------------------------------  -----  ---------  --------  ----------  --------------  -------------------  ----------------------
+/opt/airflow/dags/daily_prediction_pipeline.py                           1           0  0.76s           2025-11-13T20:40:52                      12
+/opt/airflow/dags/initialization_pipeline.py                             1           0  0.66s           2025-11-13T20:40:52                      10
+================================================================================
+[2025-11-13T20:41:51.742+0000] {manager.py:997} INFO - 
+================================================================================
+DAG File Processing Stats
+
+File Path                                       PID    Runtime      # DAGs    # Errors  Last Runtime    Last Run               Last # of DB Queries
+----------------------------------------------  -----  ---------  --------  ----------  --------------  -------------------  ----------------------
+/opt/airflow/dags/daily_prediction_pipeline.py                           1           0  0.51s           2025-11-13T20:41:23                      12
+/opt/airflow/dags/initialization_pipeline.py                             1           0  0.43s           2025-11-13T20:41:23                      10
+================================================================================
+[2025-11-13T20:42:22.607+0000] {manager.py:997} INFO - 
+================================================================================
+DAG File Processing Stats
+
+File Path                                       PID    Runtime      # DAGs    # Errors  Last Runtime    Last Run               Last # of DB Queries
+----------------------------------------------  -----  ---------  --------  ----------  --------------  -------------------  ----------------------
+/opt/airflow/dags/daily_prediction_pipeline.py                           1           0  0.50s           2025-11-13T20:41:54                      12
+/opt/airflow/dags/initialization_pipeline.py                             1           0  0.43s           2025-11-13T20:41:54                      10
+================================================================================
+[2025-11-13T20:42:46.295+0000] {manager.py:821} INFO - Searching for files in /opt/airflow/dags
+[2025-11-13T20:42:46.386+0000] {manager.py:824} INFO - There are 2 files in /opt/airflow/dags
+[2025-11-13T20:42:53.483+0000] {manager.py:997} INFO - 
+================================================================================
+DAG File Processing Stats
+
+File Path                                       PID    Runtime      # DAGs    # Errors  Last Runtime    Last Run               Last # of DB Queries
+----------------------------------------------  -----  ---------  --------  ----------  --------------  -------------------  ----------------------
+/opt/airflow/dags/daily_prediction_pipeline.py                           1           0  0.40s           2025-11-13T20:42:25                      12
+/opt/airflow/dags/initialization_pipeline.py                             1           0  0.36s           2025-11-13T20:42:25                      10
+================================================================================
+[2025-11-13T20:43:24.160+0000] {manager.py:997} INFO - 
+================================================================================
+DAG File Processing Stats
+
+File Path                                       PID    Runtime      # DAGs    # Errors  Last Runtime    Last Run               Last # of DB Queries
+----------------------------------------------  -----  ---------  --------  ----------  --------------  -------------------  ----------------------
+/opt/airflow/dags/daily_prediction_pipeline.py                           1           0  0.32s           2025-11-13T20:42:55                      12
+/opt/airflow/dags/initialization_pipeline.py                             1           0  0.29s           2025-11-13T20:42:55                      10
+================================================================================
+[2025-11-13T20:43:54.596+0000] {manager.py:997} INFO - 
+================================================================================
+DAG File Processing Stats
+
+File Path                                       PID    Runtime      # DAGs    # Errors  Last Runtime    Last Run               Last # of DB Queries
+----------------------------------------------  -----  ---------  --------  ----------  --------------  -------------------  ----------------------
+/opt/airflow/dags/daily_prediction_pipeline.py                           1           0  0.36s           2025-11-13T20:43:26                      12
+/opt/airflow/dags/initialization_pipeline.py                             1           0  0.30s           2025-11-13T20:43:26                      10
+================================================================================
+[2025-11-13T20:44:25.324+0000] {manager.py:997} INFO - 
+================================================================================
+DAG File Processing Stats
+
+File Path                                       PID    Runtime      # DAGs    # Errors  Last Runtime    Last Run               Last # of DB Queries
+----------------------------------------------  -----  ---------  --------  ----------  --------------  -------------------  ----------------------
+/opt/airflow/dags/daily_prediction_pipeline.py                           1           0  0.35s           2025-11-13T20:43:56                      12
+/opt/airflow/dags/initialization_pipeline.py                             1           0  0.30s           2025-11-13T20:43:56                      10
+================================================================================
+[2025-11-13T20:44:55.474+0000] {manager.py:997} INFO - 
+================================================================================
+DAG File Processing Stats
+
+File Path                                       PID    Runtime      # DAGs    # Errors  Last Runtime    Last Run               Last # of DB Queries
+----------------------------------------------  -----  ---------  --------  ----------  --------------  -------------------  ----------------------
+/opt/airflow/dags/daily_prediction_pipeline.py                           1           0  0.71s           2025-11-13T20:44:28                      12
+/opt/airflow/dags/initialization_pipeline.py                             1           0  0.56s           2025-11-13T20:44:28                      10
+================================================================================
+[2025-11-13T20:45:25.844+0000] {manager.py:997} INFO - 
+================================================================================
+DAG File Processing Stats
+
+File Path                                       PID    Runtime      # DAGs    # Errors  Last Runtime    Last Run               Last # of DB Queries
+----------------------------------------------  -----  ---------  --------  ----------  --------------  -------------------  ----------------------
+/opt/airflow/dags/daily_prediction_pipeline.py                           1           0  0.31s           2025-11-13T20:44:58                      12
+/opt/airflow/dags/initialization_pipeline.py                             1           0  0.30s           2025-11-13T20:44:58                      10
+================================================================================
+[2025-11-13T20:45:56.463+0000] {manager.py:997} INFO - 
+================================================================================
+DAG File Processing Stats
+
+File Path                                       PID    Runtime      # DAGs    # Errors  Last Runtime    Last Run               Last # of DB Queries
+----------------------------------------------  -----  ---------  --------  ----------  --------------  -------------------  ----------------------
+/opt/airflow/dags/daily_prediction_pipeline.py                           1           0  0.34s           2025-11-13T20:45:29                      12
+/opt/airflow/dags/initialization_pipeline.py                             1           0  0.31s           2025-11-13T20:45:29                      10
+================================================================================
+[2025-11-13T20:46:27.225+0000] {manager.py:997} INFO - 
+================================================================================
+DAG File Processing Stats
+
+File Path                                       PID    Runtime      # DAGs    # Errors  Last Runtime    Last Run               Last # of DB Queries
+----------------------------------------------  -----  ---------  --------  ----------  --------------  -------------------  ----------------------
+/opt/airflow/dags/daily_prediction_pipeline.py                           1           0  0.41s           2025-11-13T20:46:00                      12
+/opt/airflow/dags/initialization_pipeline.py                             1           0  0.31s           2025-11-13T20:46:00                      10
+================================================================================
+[2025-11-13T20:46:58.016+0000] {manager.py:997} INFO - 
+================================================================================
+DAG File Processing Stats
+
+File Path                                       PID    Runtime      # DAGs    # Errors  Last Runtime    Last Run               Last # of DB Queries
+----------------------------------------------  -----  ---------  --------  ----------  --------------  -------------------  ----------------------
+/opt/airflow/dags/daily_prediction_pipeline.py                           1           0  0.30s           2025-11-13T20:46:30                      12
+/opt/airflow/dags/initialization_pipeline.py                             1           0  0.25s           2025-11-13T20:46:30                      10
+================================================================================
+[2025-11-13T20:47:28.652+0000] {manager.py:997} INFO - 
+================================================================================
+DAG File Processing Stats
+
+File Path                                       PID    Runtime      # DAGs    # Errors  Last Runtime    Last Run               Last # of DB Queries
+----------------------------------------------  -----  ---------  --------  ----------  --------------  -------------------  ----------------------
+/opt/airflow/dags/daily_prediction_pipeline.py                           1           0  0.30s           2025-11-13T20:47:01                      12
+/opt/airflow/dags/initialization_pipeline.py                             1           0  0.24s           2025-11-13T20:47:01                      10
+================================================================================
+[2025-11-13T20:47:47.178+0000] {manager.py:821} INFO - Searching for files in /opt/airflow/dags
+[2025-11-13T20:47:47.410+0000] {manager.py:824} INFO - There are 2 files in /opt/airflow/dags
+[2025-11-13T20:47:59.565+0000] {manager.py:997} INFO - 
+================================================================================
+DAG File Processing Stats
+
+File Path                                       PID    Runtime      # DAGs    # Errors  Last Runtime    Last Run               Last # of DB Queries
+----------------------------------------------  -----  ---------  --------  ----------  --------------  -------------------  ----------------------
+/opt/airflow/dags/daily_prediction_pipeline.py                           1           0  0.30s           2025-11-13T20:47:31                      12
+/opt/airflow/dags/initialization_pipeline.py                             1           0  0.26s           2025-11-13T20:47:31                      10
+================================================================================
+[2025-11-13T20:48:30.507+0000] {manager.py:997} INFO - 
+================================================================================
+DAG File Processing Stats
+
+File Path                                       PID    Runtime      # DAGs    # Errors  Last Runtime    Last Run               Last # of DB Queries
+----------------------------------------------  -----  ---------  --------  ----------  --------------  -------------------  ----------------------
+/opt/airflow/dags/initialization_pipeline.py                             1           0  0.57s           2025-11-13T20:48:03                      10
+/opt/airflow/dags/daily_prediction_pipeline.py                           1           0  0.56s           2025-11-13T20:48:03                      12
+================================================================================
+[2025-11-13T20:49:00.905+0000] {manager.py:997} INFO - 
+================================================================================
+DAG File Processing Stats
+
+File Path                                       PID    Runtime      # DAGs    # Errors  Last Runtime    Last Run               Last # of DB Queries
+----------------------------------------------  -----  ---------  --------  ----------  --------------  -------------------  ----------------------
+/opt/airflow/dags/daily_prediction_pipeline.py                           1           0  0.32s           2025-11-13T20:48:33                      12
+/opt/airflow/dags/initialization_pipeline.py                             1           0  0.27s           2025-11-13T20:48:33                      10
+================================================================================
+[2025-11-13T20:49:31.807+0000] {manager.py:997} INFO - 
+================================================================================
+DAG File Processing Stats
+
+File Path                                       PID    Runtime      # DAGs    # Errors  Last Runtime    Last Run               Last # of DB Queries
+----------------------------------------------  -----  ---------  --------  ----------  --------------  -------------------  ----------------------
+/opt/airflow/dags/daily_prediction_pipeline.py                           1           0  0.40s           2025-11-13T20:49:04                      12
+/opt/airflow/dags/initialization_pipeline.py                             1           0  0.35s           2025-11-13T20:49:04                      10
+================================================================================
+[2025-11-13T20:50:02.389+0000] {manager.py:997} INFO - 
+================================================================================
+DAG File Processing Stats
+
+File Path                                       PID    Runtime      # DAGs    # Errors  Last Runtime    Last Run               Last # of DB Queries
+----------------------------------------------  -----  ---------  --------  ----------  --------------  -------------------  ----------------------
+/opt/airflow/dags/daily_prediction_pipeline.py                           1           0  0.29s           2025-11-13T20:49:35                      12
+/opt/airflow/dags/initialization_pipeline.py                             1           0  0.25s           2025-11-13T20:49:35                      10
+================================================================================
+[2025-11-13T20:50:33.028+0000] {manager.py:997} INFO - 
+================================================================================
+DAG File Processing Stats
+
+File Path                                       PID    Runtime      # DAGs    # Errors  Last Runtime    Last Run               Last # of DB Queries
+----------------------------------------------  -----  ---------  --------  ----------  --------------  -------------------  ----------------------
+/opt/airflow/dags/daily_prediction_pipeline.py                           1           0  0.31s           2025-11-13T20:50:05                      12
+/opt/airflow/dags/initialization_pipeline.py                             1           0  0.27s           2025-11-13T20:50:05                      10
+================================================================================
+[2025-11-13T20:51:03.446+0000] {manager.py:997} INFO - 
+================================================================================
+DAG File Processing Stats
+
+File Path                                       PID    Runtime      # DAGs    # Errors  Last Runtime    Last Run               Last # of DB Queries
+----------------------------------------------  -----  ---------  --------  ----------  --------------  -------------------  ----------------------
+/opt/airflow/dags/daily_prediction_pipeline.py                           1           0  0.27s           2025-11-13T20:50:36                      12
+/opt/airflow/dags/initialization_pipeline.py                             1           0  0.26s           2025-11-13T20:50:36                      10
+================================================================================
+[2025-11-13T20:51:33.980+0000] {manager.py:997} INFO - 
+================================================================================
+DAG File Processing Stats
+
+File Path                                       PID    Runtime      # DAGs    # Errors  Last Runtime    Last Run               Last # of DB Queries
+----------------------------------------------  -----  ---------  --------  ----------  --------------  -------------------  ----------------------
+/opt/airflow/dags/daily_prediction_pipeline.py                           1           0  0.28s           2025-11-13T20:51:06                      12
+/opt/airflow/dags/initialization_pipeline.py                             1           0  0.27s           2025-11-13T20:51:06                      10
+================================================================================
+[2025-11-13T20:52:04.154+0000] {manager.py:997} INFO - 
+================================================================================
+DAG File Processing Stats
+
+File Path                                       PID    Runtime      # DAGs    # Errors  Last Runtime    Last Run               Last # of DB Queries
+----------------------------------------------  -----  ---------  --------  ----------  --------------  -------------------  ----------------------
+/opt/airflow/dags/daily_prediction_pipeline.py                           1           0  0.60s           2025-11-13T20:51:37                      12
+/opt/airflow/dags/initialization_pipeline.py                             1           0  0.51s           2025-11-13T20:51:37                      10
+================================================================================
+[2025-11-13T20:52:34.811+0000] {manager.py:997} INFO - 
+================================================================================
+DAG File Processing Stats
+
+File Path                                       PID    Runtime      # DAGs    # Errors  Last Runtime    Last Run               Last # of DB Queries
+----------------------------------------------  -----  ---------  --------  ----------  --------------  -------------------  ----------------------
+/opt/airflow/dags/daily_prediction_pipeline.py                           1           0  0.29s           2025-11-13T20:52:08                      12
+/opt/airflow/dags/initialization_pipeline.py                             1           0  0.25s           2025-11-13T20:52:08                      10
+================================================================================
+[2025-11-13T20:52:47.298+0000] {manager.py:821} INFO - Searching for files in /opt/airflow/dags
+[2025-11-13T20:52:48.003+0000] {manager.py:824} INFO - There are 2 files in /opt/airflow/dags
+[2025-11-13T20:53:05.271+0000] {manager.py:997} INFO - 
+================================================================================
+DAG File Processing Stats
+
+File Path                                       PID    Runtime      # DAGs    # Errors  Last Runtime    Last Run               Last # of DB Queries
+----------------------------------------------  -----  ---------  --------  ----------  --------------  -------------------  ----------------------
+/opt/airflow/dags/daily_prediction_pipeline.py                           1           0  0.30s           2025-11-13T20:52:39                      12
+/opt/airflow/dags/initialization_pipeline.py                             1           0  0.26s           2025-11-13T20:52:39                      10
+================================================================================
+[2025-11-13T20:53:35.752+0000] {manager.py:997} INFO - 
+================================================================================
+DAG File Processing Stats
+
+File Path                                       PID    Runtime      # DAGs    # Errors  Last Runtime    Last Run               Last # of DB Queries
+----------------------------------------------  -----  ---------  --------  ----------  --------------  -------------------  ----------------------
+/opt/airflow/dags/daily_prediction_pipeline.py                           1           0  0.32s           2025-11-13T20:53:09                      12
+/opt/airflow/dags/initialization_pipeline.py                             1           0  0.29s           2025-11-13T20:53:09                      10
+================================================================================
+[2025-11-13T20:54:06.452+0000] {manager.py:997} INFO - 
+================================================================================
+DAG File Processing Stats
+
+File Path                                       PID    Runtime      # DAGs    # Errors  Last Runtime    Last Run               Last # of DB Queries
+----------------------------------------------  -----  ---------  --------  ----------  --------------  -------------------  ----------------------
+/opt/airflow/dags/daily_prediction_pipeline.py                           1           0  0.36s           2025-11-13T20:53:40                      12
+/opt/airflow/dags/initialization_pipeline.py                             1           0  0.30s           2025-11-13T20:53:40                      10
+================================================================================
+[2025-11-13T20:54:37.107+0000] {manager.py:997} INFO - 
+================================================================================
+DAG File Processing Stats
+
+File Path                                       PID    Runtime      # DAGs    # Errors  Last Runtime    Last Run               Last # of DB Queries
+----------------------------------------------  -----  ---------  --------  ----------  --------------  -------------------  ----------------------
+/opt/airflow/dags/daily_prediction_pipeline.py                           1           0  0.32s           2025-11-13T20:54:10                      12
+/opt/airflow/dags/initialization_pipeline.py                             1           0  0.27s           2025-11-13T20:54:10                      10
+================================================================================
+[2025-11-13T20:55:07.896+0000] {manager.py:997} INFO - 
+================================================================================
+DAG File Processing Stats
+
+File Path                                       PID    Runtime      # DAGs    # Errors  Last Runtime    Last Run               Last # of DB Queries
+----------------------------------------------  -----  ---------  --------  ----------  --------------  -------------------  ----------------------
+/opt/airflow/dags/daily_prediction_pipeline.py                           1           0  0.43s           2025-11-13T20:54:41                      12
+/opt/airflow/dags/initialization_pipeline.py                             1           0  0.36s           2025-11-13T20:54:41                      10
+================================================================================
+[2025-11-13T20:55:38.599+0000] {manager.py:997} INFO - 
+================================================================================
+DAG File Processing Stats
+
+File Path                                       PID    Runtime      # DAGs    # Errors  Last Runtime    Last Run               Last # of DB Queries
+----------------------------------------------  -----  ---------  --------  ----------  --------------  -------------------  ----------------------
+/opt/airflow/dags/daily_prediction_pipeline.py                           1           0  0.42s           2025-11-13T20:55:12                      12
+/opt/airflow/dags/initialization_pipeline.py                             1           0  0.37s           2025-11-13T20:55:12                      10
+================================================================================
+[2025-11-13T20:56:09.012+0000] {manager.py:997} INFO - 
+================================================================================
+DAG File Processing Stats
+
+File Path                                       PID    Runtime      # DAGs    # Errors  Last Runtime    Last Run               Last # of DB Queries
+----------------------------------------------  -----  ---------  --------  ----------  --------------  -------------------  ----------------------
+/opt/airflow/dags/daily_prediction_pipeline.py                           1           0  0.33s           2025-11-13T20:55:42                      12
+/opt/airflow/dags/initialization_pipeline.py                             1           0  0.30s           2025-11-13T20:55:42                      10
+================================================================================
+[2025-11-13T20:56:39.353+0000] {manager.py:997} INFO - 
+================================================================================
+DAG File Processing Stats
+
+File Path                                       PID    Runtime      # DAGs    # Errors  Last Runtime    Last Run               Last # of DB Queries
+----------------------------------------------  -----  ---------  --------  ----------  --------------  -------------------  ----------------------
+/opt/airflow/dags/daily_prediction_pipeline.py                           1           0  0.27s           2025-11-13T20:56:13                      12
+/opt/airflow/dags/initialization_pipeline.py                             1           0  0.26s           2025-11-13T20:56:13                      10
+================================================================================
+[2025-11-13T20:57:10.033+0000] {manager.py:997} INFO - 
+================================================================================
+DAG File Processing Stats
+
+File Path                                       PID    Runtime      # DAGs    # Errors  Last Runtime    Last Run               Last # of DB Queries
+----------------------------------------------  -----  ---------  --------  ----------  --------------  -------------------  ----------------------
+/opt/airflow/dags/daily_prediction_pipeline.py                           1           0  0.32s           2025-11-13T20:56:43                      12
+/opt/airflow/dags/initialization_pipeline.py                             1           0  0.28s           2025-11-13T20:56:43                      10
+================================================================================
+[2025-11-13T20:57:40.457+0000] {manager.py:997} INFO - 
+================================================================================
+DAG File Processing Stats
+
+File Path                                       PID    Runtime      # DAGs    # Errors  Last Runtime    Last Run               Last # of DB Queries
+----------------------------------------------  -----  ---------  --------  ----------  --------------  -------------------  ----------------------
+/opt/airflow/dags/daily_prediction_pipeline.py                           1           0  0.29s           2025-11-13T20:57:14                      12
+/opt/airflow/dags/initialization_pipeline.py                             1           0  0.28s           2025-11-13T20:57:14                      10
+================================================================================
+[2025-11-13T20:57:47.735+0000] {manager.py:821} INFO - Searching for files in /opt/airflow/dags
+[2025-11-13T20:57:48.075+0000] {manager.py:824} INFO - There are 2 files in /opt/airflow/dags
+[2025-11-13T20:58:11.363+0000] {manager.py:997} INFO - 
+================================================================================
+DAG File Processing Stats
+
+File Path                                       PID    Runtime      # DAGs    # Errors  Last Runtime    Last Run               Last # of DB Queries
+----------------------------------------------  -----  ---------  --------  ----------  --------------  -------------------  ----------------------
+/opt/airflow/dags/daily_prediction_pipeline.py                           1           0  0.28s           2025-11-13T20:57:44                      12
+/opt/airflow/dags/initialization_pipeline.py                             1           0  0.24s           2025-11-13T20:57:44                      10
+================================================================================
+[2025-11-13T20:58:42.084+0000] {manager.py:997} INFO - 
+================================================================================
+DAG File Processing Stats
+
+File Path                                       PID    Runtime      # DAGs    # Errors  Last Runtime    Last Run               Last # of DB Queries
+----------------------------------------------  -----  ---------  --------  ----------  --------------  -------------------  ----------------------
+/opt/airflow/dags/daily_prediction_pipeline.py                           1           0  0.39s           2025-11-13T20:58:15                      12
+/opt/airflow/dags/initialization_pipeline.py                             1           0  0.32s           2025-11-13T20:58:15                      10
+================================================================================
+[2025-11-13T20:59:12.711+0000] {manager.py:997} INFO - 
+================================================================================
+DAG File Processing Stats
+
+File Path                                       PID    Runtime      # DAGs    # Errors  Last Runtime    Last Run               Last # of DB Queries
+----------------------------------------------  -----  ---------  --------  ----------  --------------  -------------------  ----------------------
+/opt/airflow/dags/daily_prediction_pipeline.py                           1           0  0.29s           2025-11-13T20:58:46                      12
+/opt/airflow/dags/initialization_pipeline.py                             1           0  0.26s           2025-11-13T20:58:46                      10
+================================================================================
+[2025-11-13T20:59:43.371+0000] {manager.py:997} INFO - 
+================================================================================
+DAG File Processing Stats
+
+File Path                                       PID    Runtime      # DAGs    # Errors  Last Runtime    Last Run               Last # of DB Queries
+----------------------------------------------  -----  ---------  --------  ----------  --------------  -------------------  ----------------------
+/opt/airflow/dags/daily_prediction_pipeline.py                           1           0  0.28s           2025-11-13T20:59:17                      12
+/opt/airflow/dags/initialization_pipeline.py                             1           0  0.25s           2025-11-13T20:59:17                      10
+================================================================================
+[2025-11-13T21:00:14.124+0000] {manager.py:997} INFO - 
+================================================================================
+DAG File Processing Stats
+
+File Path                                       PID    Runtime      # DAGs    # Errors  Last Runtime    Last Run               Last # of DB Queries
+----------------------------------------------  -----  ---------  --------  ----------  --------------  -------------------  ----------------------
+/opt/airflow/dags/daily_prediction_pipeline.py                           1           0  0.42s           2025-11-13T20:59:47                      12
+/opt/airflow/dags/initialization_pipeline.py                             1           0  0.36s           2025-11-13T20:59:47                      10
+================================================================================
+[2025-11-13T21:00:44.505+0000] {manager.py:997} INFO - 
+================================================================================
+DAG File Processing Stats
+
+File Path                                       PID    Runtime      # DAGs    # Errors  Last Runtime    Last Run               Last # of DB Queries
+----------------------------------------------  -----  ---------  --------  ----------  --------------  -------------------  ----------------------
+/opt/airflow/dags/daily_prediction_pipeline.py                           1           0  0.29s           2025-11-13T21:00:18                      12
+/opt/airflow/dags/initialization_pipeline.py                             1           0  0.25s           2025-11-13T21:00:18                      10
+================================================================================
+[2025-11-13T21:01:15.064+0000] {manager.py:997} INFO - 
+================================================================================
+DAG File Processing Stats
+
+File Path                                       PID    Runtime      # DAGs    # Errors  Last Runtime    Last Run               Last # of DB Queries
+----------------------------------------------  -----  ---------  --------  ----------  --------------  -------------------  ----------------------
+/opt/airflow/dags/daily_prediction_pipeline.py                           1           0  0.30s           2025-11-13T21:00:48                      12
+/opt/airflow/dags/initialization_pipeline.py                             1           0  0.27s           2025-11-13T21:00:48                      10
+================================================================================
+[2025-11-13T21:01:45.435+0000] {manager.py:997} INFO - 
+================================================================================
+DAG File Processing Stats
+
+File Path                                       PID    Runtime      # DAGs    # Errors  Last Runtime    Last Run               Last # of DB Queries
+----------------------------------------------  -----  ---------  --------  ----------  --------------  -------------------  ----------------------
+/opt/airflow/dags/daily_prediction_pipeline.py                           1           0  0.27s           2025-11-13T21:01:19                      12
+/opt/airflow/dags/initialization_pipeline.py                             1           0  0.24s           2025-11-13T21:01:19                      10
+================================================================================
+[2025-11-13T21:02:15.958+0000] {manager.py:997} INFO - 
+================================================================================
+DAG File Processing Stats
+
+File Path                                       PID    Runtime      # DAGs    # Errors  Last Runtime    Last Run               Last # of DB Queries
+----------------------------------------------  -----  ---------  --------  ----------  --------------  -------------------  ----------------------
+/opt/airflow/dags/daily_prediction_pipeline.py                           1           0  0.31s           2025-11-13T21:01:49                      12
+/opt/airflow/dags/initialization_pipeline.py                             1           0  0.28s           2025-11-13T21:01:49                      10
+================================================================================
+[2025-11-13T21:02:46.531+0000] {manager.py:997} INFO - 
+================================================================================
+DAG File Processing Stats
+
+File Path                                       PID    Runtime      # DAGs    # Errors  Last Runtime    Last Run               Last # of DB Queries
+----------------------------------------------  -----  ---------  --------  ----------  --------------  -------------------  ----------------------
+/opt/airflow/dags/daily_prediction_pipeline.py                           1           0  0.27s           2025-11-13T21:02:20                      12
+/opt/airflow/dags/initialization_pipeline.py                             1           0  0.23s           2025-11-13T21:02:20                      10
+================================================================================
+[2025-11-13T21:02:48.552+0000] {manager.py:821} INFO - Searching for files in /opt/airflow/dags
+[2025-11-13T21:02:48.622+0000] {manager.py:824} INFO - There are 2 files in /opt/airflow/dags
+[2025-11-13T21:03:17.000+0000] {manager.py:997} INFO - 
+================================================================================
+DAG File Processing Stats
+
+File Path                                       PID    Runtime      # DAGs    # Errors  Last Runtime    Last Run               Last # of DB Queries
+----------------------------------------------  -----  ---------  --------  ----------  --------------  -------------------  ----------------------
+/opt/airflow/dags/daily_prediction_pipeline.py                           1           0  0.26s           2025-11-13T21:02:50                      12
+/opt/airflow/dags/initialization_pipeline.py                             1           0  0.23s           2025-11-13T21:02:50                      10
+================================================================================
+[2025-11-13T21:42:01.637+0000] {manager.py:821} INFO - Searching for files in /opt/airflow/dags
+[2025-11-13T21:42:05.233+0000] {manager.py:824} INFO - There are 2 files in /opt/airflow/dags
+[2025-11-13T21:42:27.474+0000] {manager.py:997} INFO - 
+================================================================================
+DAG File Processing Stats
+
+File Path                                       PID    Runtime      # DAGs    # Errors  Last Runtime    Last Run               Last # of DB Queries
+----------------------------------------------  -----  ---------  --------  ----------  --------------  -------------------  ----------------------
+/opt/airflow/dags/daily_prediction_pipeline.py                           1           0  1.59s           2025-11-13T21:42:07                      12
+/opt/airflow/dags/initialization_pipeline.py                             1           0  1.29s           2025-11-13T21:42:06                      10
+================================================================================
+[2025-11-13T21:42:58.016+0000] {manager.py:997} INFO - 
+================================================================================
+DAG File Processing Stats
+
+File Path                                       PID    Runtime      # DAGs    # Errors  Last Runtime    Last Run               Last # of DB Queries
+----------------------------------------------  -----  ---------  --------  ----------  --------------  -------------------  ----------------------
+/opt/airflow/dags/daily_prediction_pipeline.py                           1           0  0.28s           2025-11-13T21:42:37                      12
+/opt/airflow/dags/initialization_pipeline.py                             1           0  0.22s           2025-11-13T21:42:37                      10
+================================================================================
+[2025-11-13T21:43:28.729+0000] {manager.py:997} INFO - 
+================================================================================
+DAG File Processing Stats
+
+File Path                                       PID    Runtime      # DAGs    # Errors  Last Runtime    Last Run               Last # of DB Queries
+----------------------------------------------  -----  ---------  --------  ----------  --------------  -------------------  ----------------------
+/opt/airflow/dags/daily_prediction_pipeline.py                           1           0  0.27s           2025-11-13T21:43:08                      12
+/opt/airflow/dags/initialization_pipeline.py                             1           0  0.24s           2025-11-13T21:43:08                      10
+================================================================================
+[2025-11-13T21:43:59.744+0000] {manager.py:997} INFO - 
+================================================================================
+DAG File Processing Stats
+
+File Path                                       PID    Runtime      # DAGs    # Errors  Last Runtime    Last Run               Last # of DB Queries
+----------------------------------------------  -----  ---------  --------  ----------  --------------  -------------------  ----------------------
+/opt/airflow/dags/daily_prediction_pipeline.py                           1           0  0.39s           2025-11-13T21:43:39                      12
+/opt/airflow/dags/initialization_pipeline.py                             1           0  0.35s           2025-11-13T21:43:39                      10
+================================================================================
+[2025-11-13T21:44:30.401+0000] {manager.py:997} INFO - 
+================================================================================
+DAG File Processing Stats
+
+File Path                                       PID    Runtime      # DAGs    # Errors  Last Runtime    Last Run               Last # of DB Queries
+----------------------------------------------  -----  ---------  --------  ----------  --------------  -------------------  ----------------------
+/opt/airflow/dags/daily_prediction_pipeline.py                           1           0  0.28s           2025-11-13T21:44:10                      12
+/opt/airflow/dags/initialization_pipeline.py                             1           0  0.24s           2025-11-13T21:44:10                      10
+================================================================================
+[2025-11-13T21:45:01.016+0000] {manager.py:997} INFO - 
+================================================================================
+DAG File Processing Stats
+
+File Path                                       PID    Runtime      # DAGs    # Errors  Last Runtime    Last Run               Last # of DB Queries
+----------------------------------------------  -----  ---------  --------  ----------  --------------  -------------------  ----------------------
+/opt/airflow/dags/daily_prediction_pipeline.py                           1           0  0.35s           2025-11-13T21:44:40                      12
+/opt/airflow/dags/initialization_pipeline.py                             1           0  0.31s           2025-11-13T21:44:40                      10
+================================================================================
+[2025-11-13T21:45:31.641+0000] {manager.py:997} INFO - 
+================================================================================
+DAG File Processing Stats
+
+File Path                                       PID    Runtime      # DAGs    # Errors  Last Runtime    Last Run               Last # of DB Queries
+----------------------------------------------  -----  ---------  --------  ----------  --------------  -------------------  ----------------------
+/opt/airflow/dags/daily_prediction_pipeline.py                           1           0  0.38s           2025-11-13T21:45:11                      12
+/opt/airflow/dags/initialization_pipeline.py                             1           0  0.37s           2025-11-13T21:45:11                      10
+================================================================================
+[2025-11-13T21:46:02.026+0000] {manager.py:997} INFO - 
+================================================================================
+DAG File Processing Stats
+
+File Path                                       PID    Runtime      # DAGs    # Errors  Last Runtime    Last Run               Last # of DB Queries
+----------------------------------------------  -----  ---------  --------  ----------  --------------  -------------------  ----------------------
+/opt/airflow/dags/daily_prediction_pipeline.py                           1           0  0.26s           2025-11-13T21:45:42                      12
+/opt/airflow/dags/initialization_pipeline.py                             1           0  0.21s           2025-11-13T21:45:42                      10
+================================================================================
+[2025-11-13T21:46:32.482+0000] {manager.py:997} INFO - 
+================================================================================
+DAG File Processing Stats
+
+File Path                                       PID    Runtime      # DAGs    # Errors  Last Runtime    Last Run               Last # of DB Queries
+----------------------------------------------  -----  ---------  --------  ----------  --------------  -------------------  ----------------------
+/opt/airflow/dags/daily_prediction_pipeline.py                           1           0  0.23s           2025-11-13T21:46:12                      12
+/opt/airflow/dags/initialization_pipeline.py                             1           0  0.20s           2025-11-13T21:46:12                      10
+================================================================================

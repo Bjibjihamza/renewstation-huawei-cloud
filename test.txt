@@ -1,0 +1,141 @@
+# Build stage
+FROM node:20-alpine AS builder
+WORKDIR /app
+
+# Copy package files
+COPY package*.json ./
+RUN npm install
+
+# Copy source code
+COPY . .
+
+# Build with Vite
+RUN npm run build
+
+# Production stage
+FROM nginx:alpine
+COPY --from=builder /app/dist /usr/share/nginx/html
+COPY nginx.conf /etc/nginx/conf.d/default.conf
+EXPOSE 80
+CMD ["nginx", "-g", "daemon off;"]
+
+node_modules
+npm-debug.log
+.git
+.gitignore
+README.md
+.env
+.DS_Store
+dist
+.vscode import React, { useState, useEffect } from 'react';
+import {
+  Zap,
+  Battery,
+  TrendingUp,
+  Sun,
+  Wind,
+  Droplets,
+  Activity,
+  ArrowUp,
+  ArrowDown,
+  Calendar,
+  AlertCircle,
+  ChevronDown,
+} from 'lucide-react';
+
+const API_BASE_URL = 'http://localhost:8000/api/solar';
+ // Dashboard.jsx
+import React, { useState } from 'react';
+import {
+  Home,
+  Battery as BatteryIcon,
+  Zap,
+  CloudSun,
+  BarChart3,
+  Menu,
+} from 'lucide-react';
+
+import Overview from './Overviews';
+import Battery from './Battery';
+import EnergyPage from './EnergyPage';
+import SolarPage from './SolarPage';
+import WeatherPage from './WeatherPage';
+import React, { useState, useEffect } from 'react';
+import {
+  Zap,
+  Battery,
+  TrendingUp,
+  Sun,
+  Wind,
+  Droplets,
+  Activity,
+  ArrowUp,
+  ArrowDown,
+  Calendar,
+  AlertCircle,
+  ChevronDown,
+  BarChart3,
+} from 'lucide-react';
+ // EnergyPage.jsx (standalone, no tabs)
+import React, { useState, useEffect } from 'react';
+import {
+  Zap,
+  TrendingUp,
+  TrendingDown,
+  Building2,
+  Battery,
+  ArrowUpRight,
+  ArrowDownRight,
+  Calendar,
+  CloudSun,
+  BarChart3,
+  Activity,
+  Filter,
+  Search,
+} from 'lucide-react';
+// Overview.jsx
+import React, { useEffect, useState } from 'react';
+import {
+  Activity,
+  Zap,
+  Battery,
+  CloudSun,
+  Server,
+  AlertCircle,
+  RefreshCw,
+  BarChart3
+} from 'lucide-react';
+import React from 'react';
+import ReactDOM from 'react-dom/client';
+import './index.css';
+import App from './App';
+
+ReactDOM.createRoot(document.getElementById('root')).render(
+  <React.StrictMode>
+    <App />
+  </React.StrictMode>
+); {
+  "name": "renewstation-frontend",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "lucide-react": "^0.553.0",
+    "axios": "^1.6.0",
+    "react-router-dom": "^6.20.0"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-react": "^4.2.1",
+    "vite": "^5.0.8",
+    "tailwindcss": "^3.4.0",
+    "postcss": "^8.4.32",
+    "autoprefixer": "^10.4.16"
+  }
+} 

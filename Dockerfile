@@ -1,30 +1,33 @@
-# Utiliser l'image officielle Airflow comme base
-FROM apache/airflow:2.10.2
+# Dockerfile
+# =============================================================================
+#  RenewStation – Airflow Production Dockerfile
+# =============================================================================
+FROM apache/airflow:2.10.2-python3.11
 
-# Passer en mode root pour installer les packages système
+# Switch to root for system packages
 USER root
 
-# Installer les dépendances système nécessaires
 RUN apt-get update && \
     apt-get install -y --no-install-recommends \
         gcc \
+        g++ \
         python3-dev \
-        libpq-dev && \
+        libpq-dev \
+        git && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/*
 
-# Repasser en utilisateur airflow
+# Back to airflow user
 USER airflow
 
-# Mettre à jour pip d'abord (optionnel, fixe le notice)
-RUN pip install --upgrade pip
+# Upgrade pip once
+RUN pip install --upgrade pip wheel setuptools
 
-# Installer les dépendances Python
-RUN pip install --no-cache-dir \
-    pandas==2.1.4 \
-    requests==2.31.0 \
-    psycopg2-binary==2.9.9 \
-    python-dotenv==1.0.0 \
-    pvlib==0.13.1  # Updated to latest stable
+# Copy and install Python requirements (best caching)
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
 
-# Le reste est géré par docker-compose (volumes, env vars, etc.)
+# Set working directory
+WORKDIR /opt/airflow
+
+# Default entrypoint stays (used by docker-compose)

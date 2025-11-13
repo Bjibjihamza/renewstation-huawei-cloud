@@ -1,29 +1,89 @@
-# Python caches
+# .gitignore – RenewStation Huawei Cloud
+# =========================================================
+
+# Python
 __pycache__/
+*.py[cod]
+*$py.class
 *.pyc
 *.pyo
 *.pyd
+.Python
+env/
+venv/
+.venv/
+pip-log.txt
+pip-delete-this-directory.txt
+.tox/
+.coverage
+.coverage.*
+.cache
+nosetests.xml
+coverage.xml
+*.cover
+*.log
+.mypy_cache/
+.pytest_cache/
+.hypothesis/
 
-# Node.js / Frontend
+# Node.js
 node_modules/
-.env.local
-.env.development.local
-.env.test.local
-.env.production.local
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
+.pnpm-debug.log*
+dist/
+build/
 
-# Logs et temp
-logs/
-*.log
+# Docker
+.docker/
+.docker-sync/
 
-# Notebooks et outputs
-notebooks/*.csv
-notebooks/*.png
-notebooks/rapports/
+# Airflow
+airflow/airflow.db
+airflow/logs/
+airflow/webserver_config.py
 
-# IDE et OS
+# Databases
+*.sql.bak
+*.dump
+*.sqlite3
+
+# Environment variables
+.env
+.env.local
+.env.*.local
+
+# OS / Editor
 .DS_Store
+Thumbs.db
 .vscode/
 .idea/
+*.sublime-*
+*.swp
+*~
+
+# Logs & temp
+logs/
+*.log
+tmp/
+temp/
+
+# Jupyter
+.ipynb_checkpoints/
+
+# ML models (too big for git)
+*.pkl
+*.h5
+*.joblib
+*.model
+
+# Large data
+data/
+raw_data/
+*.csv
+*.parquet
+*.jsonl
+
+# Frontend build
+frontend/dist/
