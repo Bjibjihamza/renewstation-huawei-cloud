@@ -1,0 +1,14 @@
+[
+  "special_equipment_kw",
+  "hvac_kw",
+  "lighting_kw",
+  "building",
+  "day_of_year",
+  "outdoor_temp_c",
+  "month_num",
+  "humidity_pct",
+  "hour_of_day",
+  "day_of_week",
+  "solar_radiation_w_m2",
+  "is_weekend"
+]
