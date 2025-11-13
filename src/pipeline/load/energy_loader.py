@@ -1,11 +1,10 @@
+# src/pipeline/load/energy_loader.py
 import os
 from io import StringIO
-
 import pandas as pd
 import psycopg2
 from dotenv import load_dotenv
 
-# Charge les variables d'environnement depuis .env à la racine
 if os.path.exists(".env.local"):
     load_dotenv(".env.local")
 else:
@@ -20,114 +19,51 @@ DB_SSLMODE = os.getenv("GAUSSDB_SSLMODE", "disable")
 
 
 def get_db_connection():
-    """Ouvre une connexion à Postgres (base SILVER)."""
     return psycopg2.connect(
-        host=DB_HOST,
-        port=DB_PORT,
-        dbname=DB_NAME,
-        user=DB_USER,
-        password=DB_PASSWORD,
-        sslmode=DB_SSLMODE,
+        host=DB_HOST, port=DB_PORT, dbname=DB_NAME,
+        user=DB_USER, password=DB_PASSWORD, sslmode=DB_SSLMODE
     )
 
 
 def generate_energy_id(timestamp, building):
-    """
-    Génère un ID unique au format YYYYMMDDHH_BuildingName
-    Exemple: 2024010108_Hospital, 2024010108_House1
-    
-    Args:
-        timestamp: datetime object, Timestamp pandas, ou string
-        building: nom du bâtiment (str)
-    
-    Returns:
-        str: ID unique au format YYYYMMDDHH_BuildingName
-    """
     if isinstance(timestamp, str):
         timestamp = pd.to_datetime(timestamp)
-    
-    # Format: YYYYMMDDHH
-    date_part = timestamp.strftime('%Y%m%d%H')
-    
-    return f"{date_part}_{building}"
+    return timestamp.strftime('%Y%m%d%H') + f"_{building}"
 
 
-def upsert_energy_consumption_to_db(df: pd.DataFrame):
+def upsert_energy_to_archive_and_live(df: pd.DataFrame):
     """
-    UPSERT (UPDATE + INSERT) du DataFrame dans energy_consumption_hourly.
-    
-    Logique:
-    - Génère automatiquement l'ID unique (YYYYMMDDHH_BuildingName)
-    - Si (time_ts, building) existe déjà → UPDATE
-    - Sinon → INSERT
-    
-    Permet de mettre à jour les données existantes et d'ajouter les nouvelles.
+    Charge les données dans :
+    - energy_consumption_hourly_archive (tout l'historique)
+    - energy_consumption_hourly_live (seulement les dernières 48h)
     """
-    
-    # 1) Renommer les colonnes pour matcher les colonnes SQL
     df_db = df.rename(columns={
         'Time': 'time_ts',
         'Building': 'building',
-        'Winter': 'winter_flag',
-        'Spring': 'spring_flag',
-        'Summer': 'summer_flag',
-        'Fall': 'fall_flag',
+        'Winter': 'winter_flag', 'Spring': 'spring_flag',
+        'Summer': 'summer_flag', 'Fall': 'fall_flag',
         'Outdoor Temp (°C)': 'outdoor_temp_c',
         'Humidity (%)': 'humidity_pct',
         'Cloud Cover (%)': 'cloud_cover_pct',
         'Solar Radiation (W/m²)': 'solar_radiation_w_m2',
-        'Hour': 'hour_of_day',
-        'DayOfWeek': 'day_of_week',
-        'Month': 'month_num',
-        'DayOfYear': 'day_of_year',
-        'IsWeekend': 'is_weekend',
-        'IsHoliday': 'is_holiday',
+        'Hour': 'hour_of_day', 'DayOfWeek': 'day_of_week',
+        'Month': 'month_num', 'DayOfYear': 'day_of_year',
+        'IsWeekend': 'is_weekend', 'IsHoliday': 'is_holiday',
         'IsPeakHour': 'is_peak_hour',
-        'Lighting [kW]': 'lighting_kw',
-        'HVAC [kW]': 'hvac_kw',
+        'Lighting [kW]': 'lighting_kw', 'HVAC [kW]': 'hvac_kw',
         'Special Equipment [kW]': 'special_equipment_kw',
         'Use [kW]': 'use_kw',
     })
 
-    # 2) Générer l'ID unique (YYYYMMDDHH_building) pour chaque ligne
-    print("🔑 Génération des IDs uniques...")
-    
-    # Convertir time_ts en datetime si ce n'est pas déjà fait
     df_db['time_ts'] = pd.to_datetime(df_db['time_ts'])
-    
-    # Générer l'ID avec la fonction
-    df_db['id'] = df_db.apply(
-        lambda row: generate_energy_id(row['time_ts'], row['building']),
-        axis=1
-    )
-    
-    # Afficher quelques exemples
-    print(f"📋 Exemples d'IDs générés: {df_db['id'].head(3).tolist()}")
+    df_db['id'] = df_db.apply(lambda row: generate_energy_id(row['time_ts'], row['building']), axis=1)
 
-    # 3) Colonnes dans l'ordre de la table SQL (id en premier)
     cols = [
-        'id',
-        'time_ts',
-        'building',
-        'winter_flag',
-        'spring_flag',
-        'summer_flag',
-        'fall_flag',
-        'outdoor_temp_c',
-        'humidity_pct',
-        'cloud_cover_pct',
-        'solar_radiation_w_m2',
-        'hour_of_day',
-        'day_of_week',
-        'month_num',
-        'day_of_year',
-        'is_weekend',
-        'is_holiday',
-        'is_peak_hour',
-        'lighting_kw',
-        'hvac_kw',
-        'special_equipment_kw',
-        'use_kw',
+        'id', 'time_ts', 'building', 'winter_flag', 'spring_flag', 'summer_flag', 'fall_flag',
+        'outdoor_temp_c', 'humidity_pct', 'cloud_cover_pct', 'solar_radiation_w_m2',
+        'hour_of_day', 'day_of_week', 'month_num', 'day_of_year',
+        'is_weekend', 'is_holiday', 'is_peak_hour',
+        'lighting_kw', 'hvac_kw', 'special_equipment_kw', 'use_kw'
     ]
     df_db = df_db[cols]
 
@@ -135,190 +71,86 @@ def upsert_energy_consumption_to_db(df: pd.DataFrame):
     cur = conn.cursor()
 
     try:
-        # 4) Créer une table temporaire (incluant 'id')
-        print("🔄 Création de la table temporaire...")
+        # Table temporaire
         cur.execute("""
-            CREATE TEMP TABLE temp_energy_consumption (
-                id                     VARCHAR(50)    NOT NULL,
-                time_ts                TIMESTAMP      NOT NULL,
-                building               VARCHAR(50)    NOT NULL,
-                winter_flag            SMALLINT       NOT NULL,
-                spring_flag            SMALLINT       NOT NULL,
-                summer_flag            SMALLINT       NOT NULL,
-                fall_flag              SMALLINT       NOT NULL,
-                outdoor_temp_c         NUMERIC(5,2),
-                humidity_pct           NUMERIC(5,2),
-                cloud_cover_pct        NUMERIC(5,2),
-                solar_radiation_w_m2   NUMERIC(8,2),
-                hour_of_day            SMALLINT       NOT NULL,
-                day_of_week            SMALLINT       NOT NULL,
-                month_num              SMALLINT       NOT NULL,
-                day_of_year            SMALLINT       NOT NULL,
-                is_weekend             SMALLINT       NOT NULL,
-                is_holiday             SMALLINT       NOT NULL,
-                is_peak_hour           SMALLINT       NOT NULL,
-                lighting_kw            NUMERIC(10,4),
-                hvac_kw                NUMERIC(10,4),
-                special_equipment_kw   NUMERIC(10,4),
-                use_kw                 NUMERIC(10,4)
+            CREATE TEMP TABLE temp_energy (
+                LIKE energy_consumption_hourly_archive INCLUDING ALL
             )
         """)
 
-        # 5) Charger les données dans la table temporaire via COPY
         buffer = StringIO()
         df_db.to_csv(buffer, index=False, header=False)
         buffer.seek(0)
+        cur.copy_expert("""
+            COPY temp_energy FROM STDIN WITH (FORMAT csv)
+        """, buffer)
 
-        copy_sql = """
-        COPY temp_energy_consumption (
-            id,
-            time_ts,
-            building,
-            winter_flag,
-            spring_flag,
-            summer_flag,
-            fall_flag,
-            outdoor_temp_c,
-            humidity_pct,
-            cloud_cover_pct,
-            solar_radiation_w_m2,
-            hour_of_day,
-            day_of_week,
-            month_num,
-            day_of_year,
-            is_weekend,
-            is_holiday,
-            is_peak_hour,
-            lighting_kw,
-            hvac_kw,
-            special_equipment_kw,
-            use_kw
-        )
-        FROM STDIN WITH (FORMAT csv)
-        """
+        # UPSERT dans ARCHIVE
+        cur.execute("""
+            INSERT INTO energy_consumption_hourly_archive
+            SELECT * FROM temp_energy
+            ON CONFLICT (time_ts, building) DO UPDATE SET
+                id = EXCLUDED.id,
+                winter_flag = EXCLUDED.winter_flag,
+                spring_flag = EXCLUDED.spring_flag,
+                summer_flag = EXCLUDED.summer_flag,
+                fall_flag = EXCLUDED.fall_flag,
+                outdoor_temp_c = EXCLUDED.outdoor_temp_c,
+                humidity_pct = EXCLUDED.humidity_pct,
+                cloud_cover_pct = EXCLUDED.cloud_cover_pct,
+                solar_radiation_w_m2 = EXCLUDED.solar_radiation_w_m2,
+                hour_of_day = EXCLUDED.hour_of_day,
+                day_of_week = EXCLUDED.day_of_week,
+                month_num = EXCLUDED.month_num,
+                day_of_year = EXCLUDED.day_of_year,
+                is_weekend = EXCLUDED.is_weekend,
+                is_holiday = EXCLUDED.is_holiday,
+                is_peak_hour = EXCLUDED.is_peak_hour,
+                lighting_kw = EXCLUDED.lighting_kw,
+                hvac_kw = EXCLUDED.hvac_kw,
+                special_equipment_kw = EXCLUDED.special_equipment_kw,
+                use_kw = EXCLUDED.use_kw
+        """)
 
-        print("📥 Chargement des données dans la table temporaire...")
-        cur.copy_expert(copy_sql, buffer)
+        # UPSERT dans LIVE (seulement dernières 48h)
+        cur.execute("""
+            INSERT INTO energy_consumption_hourly_live
+            SELECT * FROM temp_energy
+            WHERE time_ts >= NOW() - INTERVAL '48 hours'
+            ON CONFLICT (time_ts, building) DO UPDATE SET
+                id = EXCLUDED.id,
+                winter_flag = EXCLUDED.winter_flag,
+                spring_flag = EXCLUDED.spring_flag,
+                summer_flag = EXCLUDED.summer_flag,
+                fall_flag = EXCLUDED.fall_flag,
+                outdoor_temp_c = EXCLUDED.outdoor_temp_c,
+                humidity_pct = EXCLUDED.humidity_pct,
+                cloud_cover_pct = EXCLUDED.cloud_cover_pct,
+                solar_radiation_w_m2 = EXCLUDED.solar_radiation_w_m2,
+                hour_of_day = EXCLUDED.hour_of_day,
+                day_of_week = EXCLUDED.day_of_week,
+                month_num = EXCLUDED.month_num,
+                day_of_year = EXCLUDED.day_of_year,
+                is_weekend = EXCLUDED.is_weekend,
+                is_holiday = EXCLUDED.is_holiday,
+                is_peak_hour = EXCLUDED.is_peak_hour,
+                lighting_kw = EXCLUDED.lighting_kw,
+                hvac_kw = EXCLUDED.hvac_kw,
+                special_equipment_kw = EXCLUDED.special_equipment_kw,
+                use_kw = EXCLUDED.use_kw
+        """)
 
-        # 6) UPDATE des enregistrements existants (par time_ts + building)
-        print("🔄 Mise à jour des enregistrements existants...")
-        update_sql = """
-        UPDATE energy_consumption_hourly ec
-        SET 
-            id = t.id,
-            winter_flag = t.winter_flag,
-            spring_flag = t.spring_flag,
-            summer_flag = t.summer_flag,
-            fall_flag = t.fall_flag,
-            outdoor_temp_c = t.outdoor_temp_c,
-            humidity_pct = t.humidity_pct,
-            cloud_cover_pct = t.cloud_cover_pct,
-            solar_radiation_w_m2 = t.solar_radiation_w_m2,
-            hour_of_day = t.hour_of_day,
-            day_of_week = t.day_of_week,
-            month_num = t.month_num,
-            day_of_year = t.day_of_year,
-            is_weekend = t.is_weekend,
-            is_holiday = t.is_holiday,
-            is_peak_hour = t.is_peak_hour,
-            lighting_kw = t.lighting_kw,
-            hvac_kw = t.hvac_kw,
-            special_equipment_kw = t.special_equipment_kw,
-            use_kw = t.use_kw
-        FROM temp_energy_consumption t
-        WHERE ec.time_ts = t.time_ts 
-          AND ec.building = t.building
-        """
-        cur.execute(update_sql)
-        updated_count = cur.rowcount
-
-        # 7) INSERT des nouveaux enregistrements (incluant 'id')
-        print("➕ Insertion des nouveaux enregistrements...")
-        insert_sql = """
-        INSERT INTO energy_consumption_hourly (
-            id,
-            time_ts,
-            building,
-            winter_flag,
-            spring_flag,
-            summer_flag,
-            fall_flag,
-            outdoor_temp_c,
-            humidity_pct,
-            cloud_cover_pct,
-            solar_radiation_w_m2,
-            hour_of_day,
-            day_of_week,
-            month_num,
-            day_of_year,
-            is_weekend,
-            is_holiday,
-            is_peak_hour,
-            lighting_kw,
-            hvac_kw,
-            special_equipment_kw,
-            use_kw
-        )
-        SELECT 
-            t.id,
-            t.time_ts,
-            t.building,
-            t.winter_flag,
-            t.spring_flag,
-            t.summer_flag,
-            t.fall_flag,
-            t.outdoor_temp_c,
-            t.humidity_pct,
-            t.cloud_cover_pct,
-            t.solar_radiation_w_m2,
-            t.hour_of_day,
-            t.day_of_week,
-            t.month_num,
-            t.day_of_year,
-            t.is_weekend,
-            t.is_holiday,
-            t.is_peak_hour,
-            t.lighting_kw,
-            t.hvac_kw,
-            t.special_equipment_kw,
-            t.use_kw
-        FROM temp_energy_consumption t
-        WHERE NOT EXISTS (
-            SELECT 1 
-            FROM energy_consumption_hourly ec 
-            WHERE ec.time_ts = t.time_ts 
-              AND ec.building = t.building
-        )
-        """
-        cur.execute(insert_sql)
-        inserted_count = cur.rowcount
-
-        # 8) Commit
         conn.commit()
-
-        print("\n" + "=" * 80)
-        print("✅ UPSERT TERMINÉ")
-        print(f"🔄 Lignes mises à jour: {updated_count}")
-        print(f"➕ Nouvelles lignes insérées: {inserted_count}")
-        print(f"📊 Total traité: {len(df_db)} lignes")
-        print(f"🔑 Format ID: YYYYMMDDHH_BuildingName")
-        print("=" * 80)
+        print(f"ENERGY UPSERT DONE → {len(df_db)} rows in archive + live (last 48h)")
 
     except Exception as e:
         conn.rollback()
-        print(f"\n❌ ERREUR lors de l'UPSERT: {e}")
-        import traceback
-        traceback.print_exc()
-        raise
+        raise e
     finally:
         cur.close()
         conn.close()
 
 
 def load_energy_consumption_to_db(df: pd.DataFrame):
-    """
-    Fonction legacy conservée pour compatibilité.
-    Délègue à upsert_energy_consumption_to_db().
-    """
-    print("⚠️  Utilisation de la fonction legacy - redirection vers UPSERT")
-    upsert_energy_consumption_to_db(df)
+    """Legacy compatibilité"""
+    upsert_energy_to_archive_and_live(df)

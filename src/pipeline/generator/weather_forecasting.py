@@ -4,10 +4,10 @@ from pathlib import Path
 
 import pandas as pd
 import requests
-import argparse  ### UPDATED: Added for mode handling
+import argparse
 
 from src.pipeline.load.weather_loader import (
-    load_weather_forecast_to_db,  ### UPDATED: Uses upsert internally
+    load_weather_forecast_to_db,
     get_db_connection,
 )
 
@@ -15,18 +15,14 @@ from src.pipeline.load.weather_loader import (
 #   CONSTANTES
 # ============================================================================
 
-# Date de début à garantir en base
 START_HISTORY_DATE = datetime(2024, 1, 1)
 
-# Coordonnées Casablanca
 LATITUDE = 33.5731
 LONGITUDE = -7.5898
 
-# URLs Open-Meteo
 FORECAST_URL = "https://api.open-meteo.com/v1/forecast"
 ARCHIVE_URL = "https://archive-api.open-meteo.com/v1/archive"
 
-# Variables horaires utilisées
 HOURLY_VARS = [
     "temperature_2m",
     "relativehumidity_2m",
@@ -41,9 +37,7 @@ HOURLY_VARS = [
 ]
 
 TIMEZONE = "Africa/Casablanca"
-
-# ### UPDATED: Changed to 1 week as per req
-FORECAST_HORIZON_DAYS = 7  # 1 week
+FORECAST_HORIZON_DAYS = 7  # 7 jours de prévisions
 
 # ============================================================================
 #   FONCTIONS UTILITAIRES
@@ -117,7 +111,6 @@ def _fetch_history_and_load(start_dt: datetime, end_dt: datetime):
     hourly_data = data["hourly"]
     df = _build_dataframe_from_hourly(hourly_data)
 
-    # Filtrer aux bornes exactes (au cas où l'API renvoie plus large)
     df["__dt"] = pd.to_datetime(df["Date"] + " " + df["Heure"])
     df = df[(df["__dt"] >= start_dt) & (df["__dt"] <= end_dt)].drop(columns="__dt")
 
@@ -127,24 +120,19 @@ def _fetch_history_and_load(start_dt: datetime, end_dt: datetime):
 
     filename = _save_csv(df, "meteo_casablanca_historique")
     print(f"📦 Fichier CSV historique créé: {filename}")
-    print(f"📊 Nombre total d'heures (filtrées): {len(df)}")
-    print(f"🕐 Période (effective): {df['Date'].min()} {df['Heure'].min()} → {df['Date'].max()} {df['Heure'].max()}")
-    print(f"🌐 Source: Open-Meteo Historical API")
+    print(f"📊 Nombre total d'heures: {len(df)}")
+    print(f"🕐 Période: {df['Date'].min()} {df['Heure'].min()} → {df['Date'].max()} {df['Heure'].max()}")
 
-    # Chargement DB (UPSERT)
     load_weather_forecast_to_db(df)
 
 
-### UPDATED: Renamed and adjusted for 1-week horizon
-def _fetch_forecast_1w_and_load():
+def _fetch_forecast_7d_and_load():
     """
-    Récupère les 7 prochains jours (1 week) de prévisions météo
+    Récupère les 7 prochains jours de prévisions météo
     et les charge en DB (UPSERT).
-    
-    Ces données seront plus tard remplacées par des données réelles via backfill.
     """
     print("\n" + "=" * 80)
-    print(f"🔮 PRÉVISIONS MÉTÉO CASABLANCA - {FORECAST_HORIZON_DAYS} jours (1 week)")
+    print(f"🔮 PRÉVISIONS MÉTÉO CASABLANCA - {FORECAST_HORIZON_DAYS} jours")
     print("=" * 80)
 
     params = {
@@ -152,7 +140,7 @@ def _fetch_forecast_1w_and_load():
         "longitude": LONGITUDE,
         "hourly": HOURLY_VARS,
         "timezone": TIMEZONE,
-        "forecast_days": FORECAST_HORIZON_DAYS,  ### UPDATED: 7 days
+        "forecast_days": FORECAST_HORIZON_DAYS,
     }
 
     response = requests.get(FORECAST_URL, params=params)
@@ -162,88 +150,33 @@ def _fetch_forecast_1w_and_load():
     hourly_data = data["hourly"]
     df = _build_dataframe_from_hourly(hourly_data)
 
-    # ### UPDATED: Keep all 1-week data (no filter to 6h)
     now = datetime.now()
     df["__dt"] = pd.to_datetime(df["Date"] + " " + df["Heure"])
-    df = df[df["__dt"] >= now].drop(columns="__dt")  # Only future
+    df = df[df["__dt"] >= now].drop(columns="__dt")
 
     if df.empty:
         print("⚠️ Aucune prévision disponible")
         return
 
-    filename = _save_csv(df, "meteo_casablanca_forecast_1w")
+    filename = _save_csv(df, "meteo_casablanca_forecast_7d")
     print(f"\n📦 Fichier CSV prévisions créé: {filename}")
-    print(f"📊 Nombre d'heures: {len(df)} heures (~{FORECAST_HORIZON_DAYS*24})")
+    print(f"📊 Nombre d'heures: {len(df)} heures")
     print(f"🕐 Période: {df['Date'].min()} {df['Heure'].min()} → {df['Date'].max()} {df['Heure'].max()}")
-    print(f"🌐 Source: Open-Meteo Forecast API")
 
-    # Chargement DB (UPSERT)
     load_weather_forecast_to_db(df)
 
     print("\n" + "=" * 80)
-    print("✅ SUCCÈS! Prévisions météo (1 week) récupérées et chargées en DB")
-    print("⚠️  Ces prévisions seront remplacées par des données réelles plus tard")
+    print("✅ SUCCÈS! Prévisions météo (7 jours) récupérées et chargées en DB")
     print("=" * 80)
-
-
-def _backfill_forecast_with_real_data():
-    """
-    Remplace les prévisions passées par des données réelles.
-    
-    Logique:
-    - Récupère toutes les prévisions dont forecast_timestamp < maintenant
-    - Les remplace par des vraies données depuis l'API archive
-    """
-    print("\n" + "=" * 80)
-    print("🔄 BACKFILL DES PRÉVISIONS AVEC DONNÉES RÉELLES")
-    print("=" * 80)
-
-    conn = get_db_connection()
-    cur = conn.cursor()
-
-    try:
-        # Trouver les prévisions qui sont maintenant dans le passé
-        now = datetime.now()
-        
-        cur.execute(
-            """
-            SELECT 
-                MIN(forecast_timestamp) as oldest_forecast,
-                MAX(forecast_timestamp) as newest_forecast
-            FROM weather_forecast_hourly
-            WHERE forecast_timestamp < %s
-              AND forecast_timestamp >= %s
-            """,
-            (now, START_HISTORY_DATE),
-        )
-        row = cur.fetchone()
-        oldest, newest = row[0], row[1]
-
-    finally:
-        cur.close()
-        conn.close()
-
-    if oldest is None:
-        print("✅ Aucune prévision passée à backfill")
-        return
-
-    print(f"📍 Prévisions passées trouvées: {oldest} → {newest}")
-    print(f"🔄 Remplacement par données réelles...")
-
-    # Récupérer les vraies données pour cette période
-    _fetch_history_and_load(oldest, newest)
-
-    print("✅ Backfill des prévisions terminé")
 
 
 def _ensure_history_coverage():
     """
-    Vérifie que la table weather_forecast_hourly contient bien
-    toutes les heures entre START_HISTORY_DATE et aujourd'hui (fin de journée).
-    Si des trous existent au début ou à la fin, on les backfill via l'API historique.
+    Vérifie que la table weather_archive_hourly contient bien
+    toutes les heures entre START_HISTORY_DATE et aujourd'hui.
+    Si des trous existent, on les backfill via l'API historique.
     """
 
-    # Fin de coverage souhaité = aujourd'hui 23:00
     today = datetime.now().date()
     history_end = datetime.combine(today, datetime.max.time()).replace(
         hour=23, minute=0, second=0, microsecond=0
@@ -262,7 +195,7 @@ def _ensure_history_coverage():
             SELECT 
                 MIN(forecast_timestamp),
                 MAX(forecast_timestamp)
-            FROM weather_forecast_hourly
+            FROM weather_archive_hourly
             WHERE forecast_timestamp >= %s
               AND forecast_timestamp <= %s
             """,
@@ -278,19 +211,16 @@ def _ensure_history_coverage():
     print(f"📉 Existing MIN timestamp: {existing_min}")
     print(f"📈 Existing MAX timestamp: {existing_max}")
 
-    # Cas 1: rien en base sur cette période -> backfill complet
     if existing_min is None or existing_max is None:
         print("⚠️ Aucun historique trouvé, backfill complet…")
         _fetch_history_and_load(START_HISTORY_DATE, history_end)
         return
 
-    # Cas 2: trou au début (on n'a pas remonté jusqu'à START_HISTORY_DATE)
     if existing_min > START_HISTORY_DATE:
         missing_start_end = existing_min - timedelta(hours=1)
         print(f"⚠️ Gap en début: backfill {START_HISTORY_DATE} → {missing_start_end}")
         _fetch_history_and_load(START_HISTORY_DATE, missing_start_end)
 
-    # Cas 3: trou à la fin (on n'a pas jusqu'à today)
     if existing_max < history_end:
         missing_end_start = existing_max + timedelta(hours=1)
         print(f"⚠️ Gap en fin: backfill {missing_end_start} → {history_end}")
@@ -300,32 +230,33 @@ def _ensure_history_coverage():
 
 
 # ============================================================================
-#   FONCTION PRINCIPALE APPELÉE PAR AIRFLOW
+#   FONCTION PRINCIPALE
 # ============================================================================
 
 def get_hourly_weather_forecast(mode="full"):
     """
-    ### UPDATED: Mode-based logic
-    
     Modes:
-    - 'full': Full historical backfill (2024-01-01 → NOW) + backfill old forecasts + 1-week forecast
-    - 'recent': Only backfill last 6h with archive (no forecast fetch)
+    - 'full': Full historical backfill (2024-01-01 → NOW) + 7 jours forecast
+    - 'recent': Backfill dernières 24h avec archive (au lieu de 6h)
+    - 'forecast': Seulement les 7 jours de prévisions (sans backfill)
     """
     try:
         if mode == "full":
             # 1) S'assurer que l'historique 2024-01-01 → aujourd'hui est complet
             _ensure_history_coverage()
 
-            # 2) Backfill des prévisions passées avec données réelles
-            _backfill_forecast_with_real_data()
-
-            # 3) Récupérer et charger 1 week de prévision
-            _fetch_forecast_1w_and_load()
+            # 2) Récupérer et charger 7 jours de prévision
+            _fetch_forecast_7d_and_load()
+            
+        elif mode == "forecast":
+            # Seulement les prévisions (utilisé dans daily pipeline)
+            _fetch_forecast_7d_and_load()
+            
         else:  # 'recent'
-            # Only backfill last 6h historical (no forecast)
-            now_minus_6h = datetime.now() - timedelta(hours=6)
-            _fetch_history_and_load(now_minus_6h, datetime.now())
-            print("✅ Recent backfill (last 6h) terminé - no forecast added")
+            # Backfill dernières 24h (au lieu de 6h)
+            now_minus_24h = datetime.now() - timedelta(days=1)
+            _fetch_history_and_load(now_minus_24h, datetime.now())
+            print("✅ Recent backfill (dernières 24h) terminé")
 
     except requests.exceptions.RequestException as e:
         print(f"❌ Erreur HTTP lors d'un appel Open-Meteo: {e}")
@@ -372,29 +303,13 @@ def get_weather_description(code: int) -> str:
     return weather_codes.get(code, f"Code: {code}")
 
 
-def get_weather_icon(code: int) -> str:
-    """Retourne un emoji selon le code météo."""
-    if code == 0:
-        return "☀️"
-    elif code in [1, 2]:
-        return "⛅"
-    elif code == 3:
-        return "☁️"
-    elif code in [45, 48]:
-        return "🌫️"
-    elif code in [51, 53, 55, 61, 63, 65, 80, 81, 82]:
-        return "🌧️"
-    elif code in [71, 73, 75, 77, 85, 86]:
-        return "❄️"
-    elif code in [95, 96, 99]:
-        return "⛈️"
-    else:
-        return "🌤️"
-
-
-### UPDATED: CLI entrypoint with argparse
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Weather Forecasting Pipeline")
-    parser.add_argument('--mode', default='full', choices=['full', 'recent'], help="Mode: full historical + forecast or recent 6h backfill")
+    parser.add_argument(
+        '--mode', 
+        default='full', 
+        choices=['full', 'recent', 'forecast'], 
+        help="Mode: full (historique+forecast), recent (24h backfill), forecast (7j only)"
+    )
     args = parser.parse_args()
     get_hourly_weather_forecast(mode=args.mode)

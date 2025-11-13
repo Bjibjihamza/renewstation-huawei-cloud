@@ -73,7 +73,7 @@ occupancy_range = {
 ### UPDATED: Added end_date param for recent mode
 def fetch_real_weather_data(end_date=None):
     """
-    Récupère les données météo réelles depuis weather_forecast_hourly
+    Récupère les données météo réelles depuis weather_archive_hourly
     à partir du 2024-01-01 jusqu'à end_date (default: NOW()).
     
     Retourne un DataFrame avec les colonnes nécessaires pour la génération.
@@ -96,7 +96,7 @@ def fetch_real_weather_data(end_date=None):
             humidity_pct,
             cloud_cover_pct,
             solar_radiation_w_m2
-        FROM weather_forecast_hourly
+        FROM weather_archive_hourly
         WHERE forecast_timestamp >= '2024-01-01 00:00:00'
           AND forecast_timestamp <= %s
         ORDER BY forecast_timestamp

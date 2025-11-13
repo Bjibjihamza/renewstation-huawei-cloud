@@ -1,4 +1,31 @@
-# Environment configuration
+# Python virtual environment
+cenv/
+
+# .env files (contains sensitive data)
 .env
-.env.cloud
+
+# Logs
 logs/
+
+# IDEs and editor specific files (adjust based on the editor you use)
+.vscode/
+.idea/
+
+# Python cache files
+__pycache__/
+*.pyc
+*.pyo
+
+# Docker-related files (optional if you don't need them in version control)
+docker-compose.yml
+Dockerfile
+
+# Jupyter Notebook checkpoints
+.ipynb_checkpoints/
+
+# Other possible files to ignore
+*.log
+*.swp
+
+# Node.js dependencies
+node_modules/
