@@ -14,7 +14,6 @@ import Battery from './Battery';
 import EnergyPage from './EnergyPage';
 import SolarPage from './SolarPage';
 import WeatherPage from './WeatherPage';
-import Test from  './test'
 
 const Dashboard = () => {
   const [activePage, setActivePage] = useState('overview');
@@ -100,7 +99,6 @@ const Dashboard = () => {
         {activePage === 'energy' && <EnergyPage />}
         {activePage === 'solar' && <SolarPage />}
         {activePage === 'weather' && <WeatherPage />}
-        {activePage === 'test' && <Test />}
 
       </div>
     </div>

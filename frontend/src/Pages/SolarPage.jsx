@@ -254,7 +254,7 @@ const SolarProductionPage = () => {
                 <p className="text-2xl font-bold text-emerald-900">{weather.temp}°C</p>
               </div>
               <div className="text-center">
-                <Droplets className="w-6 h-6 text-blue-600 mx-auto mb-1" />
+                <Droplets className="w-6 h-6 text-blue-600 mx-auto mb-1"/>
                 <p className="text-sm text-emerald-700">Humidité</p>
                 <p className="text-2xl font-bold text-emerald-900">{weather.humidity}%</p>
               </div>

@@ -71,8 +71,7 @@ const SolarDashboard = () => {
 
       const [batteryRes, solarRes, energyRes, weatherRes] = await Promise.all([
         fetch(`${API_BASE_URL}/battery-state?limit=600`),
-fetch(`${API_BASE_URL}/predicted-solar-production?limit=300`),
-
+        fetch(`${API_BASE_URL}/predicted-solar-production?limit=300`),
         fetch(`${API_BASE_URL}/energy-consumption-hourly?limit=200`),
         fetch(`${API_BASE_URL}/weather-forecast-hourly?limit=10`),
       ]);
@@ -83,8 +82,8 @@ fetch(`${API_BASE_URL}/predicted-solar-production?limit=300`),
 
       const batteryJson = await batteryRes.json();
       const solarJson = await solarRes.json();
-const solarList = (solarJson.results || []).reverse();
-    setSolarProduction(solarList);
+      const solarList = (solarJson.results || []).reverse();
+      setSolarProduction(solarList);
 
       const energyJson = await energyRes.json();
       const weatherJson = await weatherRes.json();
@@ -139,7 +138,13 @@ const solarList = (solarJson.results || []).reverse();
         }
         return acc;
       },
-      { row: solar[0], valueKw: safeParseFloat(solar[0].ac_power_kw ?? solar[0].predicted_production_kwh, 0) }
+      {
+        row: solar[0],
+        valueKw: safeParseFloat(
+          solar[0].ac_power_kw ?? solar[0].predicted_production_kwh,
+          0
+        ),
+      }
     );
 
     const bestKw = Math.max(bestSolar.valueKw, 0);
@@ -322,7 +327,9 @@ const solarList = (solarJson.results || []).reverse();
       <div className="min-h-screen bg-gradient-to-br from-green-50 via-emerald-50 to-teal-50 flex items-center justify-center p-8">
         <div className="bg-white/60 backdrop-blur-sm rounded-3xl p-8 max-w-md shadow-lg">
           <AlertCircle className="w-12 h-12 text-red-500 mx-auto mb-4" />
-          <h2 className="text-xl font-bold text-red-800 mb-2 text-center">Erreur de connexion</h2>
+          <h2 className="text-xl font-bold text-red-800 mb-2 text-center">
+            Erreur de connexion
+          </h2>
           <p className="text-red-600 text-center mb-4">{error}</p>
           <button
             onClick={fetchAllData}
@@ -349,6 +356,44 @@ const solarList = (solarJson.results || []).reverse();
   const batteryLevel = safeParseFloat(currentBattery.soc, 0);
   const batteryStored = safeParseFloat(currentBattery.energy, 0);
 
+  // ---- extra derived metrics for bottom full-width section ----
+  const batterySeries = getBatterySeries();
+  const realPoints = batterySeries.filter((p) => !p.isPredicted);
+  const predictedPoints = batterySeries.filter((p) => p.isPredicted);
+
+  const avgPredictedSoc =
+    predictedPoints.length > 0
+      ? predictedPoints.reduce((sum, p) => sum + (p.soc || 0), 0) /
+        predictedPoints.length
+      : 0;
+
+  const next24hPredicted = predictedPoints.slice(0, 24);
+  const minNext24hSoc =
+    next24hPredicted.length > 0
+      ? Math.min(...next24hPredicted.map((p) => p.soc || 0))
+      : null;
+  const maxNext24hSoc =
+    next24hPredicted.length > 0
+      ? Math.max(...next24hPredicted.map((p) => p.soc || 0))
+      : null;
+
+  const now = new Date();
+  const last24hConsumptionPoints = energyConsumption.filter((e) => {
+    if (!e.time_ts) return false;
+    const ts = new Date(e.time_ts);
+    return now - ts <= 24 * 60 * 60 * 1000 && now >= ts;
+  });
+  const totalLast24hUseKw = last24hConsumptionPoints.reduce(
+    (sum, e) => sum + safeParseFloat(e.use_kw, 0),
+    0
+  );
+  const avgLast24hUseKw =
+    last24hConsumptionPoints.length > 0
+      ? totalLast24hUseKw / last24hConsumptionPoints.length
+      : 0;
+  const estimatedAutonomyHours =
+    avgLast24hUseKw > 0 ? batteryStored / avgLast24hUseKw : null;
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-green-50 via-emerald-50 to-teal-50 p-8">
       <div className="max-w-7xl mx-auto">
@@ -357,7 +402,9 @@ const solarList = (solarJson.results || []).reverse();
           <div className="flex items-center gap-4">
             <div className="flex items-center gap-3 bg-white/60 backdrop-blur-sm px-6 py-3 rounded-full shadow-sm">
               <Sun className="w-6 h-6 text-emerald-600" />
-              <span className="text-xl font-bold text-emerald-800">RenewStation</span>
+              <span className="text-xl font-bold text-emerald-800">
+                RenewStation
+              </span>
             </div>
             <div className="text-sm text-emerald-700 bg-white/40 backdrop-blur-sm px-4 py-2 rounded-full">
               <Calendar className="w-4 h-4 inline mr-2" />
@@ -395,8 +442,12 @@ const solarList = (solarJson.results || []).reverse();
                         selectedBattery === option.value ? 'bg-emerald-50' : ''
                       }`}
                     >
-                      <div className="font-medium text-emerald-900 text-sm">{option.label}</div>
-                      <div className="text-xs text-emerald-600">{option.capacity}</div>
+                      <div className="font-medium text-emerald-900 text-sm">
+                        {option.label}
+                      </div>
+                      <div className="text-xs text-emerald-600">
+                        {option.capacity}
+                      </div>
                     </button>
                   ))}
                 </div>
@@ -452,7 +503,9 @@ const solarList = (solarJson.results || []).reverse();
                     {selectedOption.label}
                   </span>
                 </div>
-                <span className="text-xs text-emerald-600">{selectedOption.capacity}</span>
+                <span className="text-xs text-emerald-600">
+                  {selectedOption.capacity}
+                </span>
               </div>
 
               <div className="mb-4">
@@ -501,7 +554,9 @@ const solarList = (solarJson.results || []).reverse();
             <div className="bg-white/40 backdrop-blur-sm rounded-3xl p-6 shadow-lg">
               <div className="flex items-center gap-2 mb-4">
                 <Sun className="w-5 h-5 text-yellow-600" />
-                <span className="text-sm font-medium text-emerald-800">Météo</span>
+                <span className="text-sm font-medium text-emerald-800">
+                  Météo
+                </span>
               </div>
               {weatherData ? (
                 <div className="space-y-3">
@@ -531,7 +586,9 @@ const solarList = (solarJson.results || []).reverse();
                   </div>
                 </div>
               ) : (
-                <p className="text-sm text-emerald-600">Données météo indisponibles</p>
+                <p className="text-sm text-emerald-600">
+                  Données météo indisponibles
+                </p>
               )}
             </div>
           </div>
@@ -541,9 +598,12 @@ const solarList = (solarJson.results || []).reverse();
             <div className="bg-gradient-to-br from-emerald-200/40 to-teal-200/40 backdrop-blur-sm rounded-3xl p-8 shadow-lg h-full">
               <div className="flex items-center justify-between mb-6">
                 <div>
-                  <h2 className="text-2xl font-bold text-emerald-900">Niveau de Batterie</h2>
+                  <h2 className="text-2xl font-bold text-emerald-900">
+                    Niveau de Batterie
+                  </h2>
                   <p className="text-xs text-emerald-700 mt-1">
-                    Jusqu&apos;à aujourd&apos;hui : valeurs réelles • Ensuite : prévisions 7 jours
+                    Jusqu&apos;à aujourd&apos;hui : valeurs réelles • Ensuite :
+                    prévisions 7 jours
                   </p>
                 </div>
                 <div className="flex gap-2">
@@ -600,14 +660,17 @@ const solarList = (solarJson.results || []).reverse();
                             data.isPredicted ? '(prévu)' : '(réel)'
                           }`}
                         >
-                          {!data.isPredicted && idx === chartData.length - 1 && (
-                            <Zap className="w-4 h-4 text-yellow-400 absolute -top-2 left-1/2 -translate-x-1/2 -translate-y-full animate-pulse" />
-                          )}
+                          {!data.isPredicted &&
+                            idx === chartData.length - 1 && (
+                              <Zap className="w-4 h-4 text-yellow-400 absolute -top-2 left-1/2 -translate-x-1/2 -translate-y-full animate-pulse" />
+                            )}
                         </div>
                       </div>
 
                       {chartData.length <= 24 || idx % 2 === 0 ? (
-                        <span className="text-xs text-emerald-600">{data.label}</span>
+                        <span className="text-xs text-emerald-600">
+                          {data.label}
+                        </span>
                       ) : (
                         <span className="text-xs text-emerald-400">.</span>
                       )}
@@ -667,7 +730,9 @@ const solarList = (solarJson.results || []).reverse();
             <div className="bg-gradient-to-br from-yellow-200/40 to-amber-200/40 backdrop-blur-sm rounded-3xl p-6 shadow-lg">
               <div className="flex items-center gap-2 mb-4">
                 <TrendingUp className="w-5 h-5 text-amber-700" />
-                <span className="text-sm font-medium text-amber-800">Économies</span>
+                <span className="text-sm font-medium text-amber-800">
+                  Économies
+                </span>
               </div>
               <div className="mb-3">
                 <span className="text-4xl font-bold text-amber-900">
@@ -692,7 +757,9 @@ const solarList = (solarJson.results || []).reverse();
               <div className="space-y-3 text-sm">
                 <div className="flex justify-between items-center">
                   <span className="text-emerald-700">Panneaux</span>
-                  <span className="font-semibold text-emerald-900">1364 actifs</span>
+                  <span className="font-semibold text-emerald-900">
+                    1364 actifs
+                  </span>
                 </div>
                 <div className="flex justify-between items-center">
                   <span className="text-emerald-700">Capacité totale</span>
@@ -709,7 +776,101 @@ const solarList = (solarJson.results || []).reverse();
           </div>
         </div>
 
+        {/* Bottom full-width battery summary */}
+        <div className="mt-8">
+          <div className="bg-white/70 backdrop-blur-sm rounded-3xl p-6 shadow-lg flex flex-col gap-6">
+            <div className="flex flex-wrap items-center justify-between gap-4">
+              <div className="flex items-center gap-3">
+                <Battery className="w-6 h-6 text-emerald-700" />
+                <div>
+                  <h3 className="text-lg font-semibold text-emerald-900">
+                    Synthèse Batterie – {selectedOption.label}
+                  </h3>
+                  <p className="text-xs text-emerald-700">
+                    Vue globale de l&apos;état actuel, des prévisions et de
+                    l&apos;autonomie estimée.
+                  </p>
+                </div>
+              </div>
+            </div>
 
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-4 w-full">
+              {/* Carte 1 : Niveau actuel */}
+              <div className="bg-emerald-50/70 rounded-2xl p-4 flex flex-col justify-between">
+                <div className="flex items-center justify-between mb-2">
+                  <span className="text-xs font-medium text-emerald-700">
+                    Niveau actuel
+                  </span>
+                  <Battery className="w-4 h-4 text-emerald-600" />
+                </div>
+                <p className="text-2xl font-bold text-emerald-900 mb-1">
+                  {batteryLevel.toFixed(1)}%
+                </p>
+                <p className="text-xs text-emerald-700">
+                  {batteryStored.toFixed(0)} /{' '}
+                  {batteryCapacity.toFixed(0)} kWh stockés
+                </p>
+              </div>
+
+              {/* Carte 2 : SOC moyen prédit */}
+              <div className="bg-emerald-50/70 rounded-2xl p-4 flex flex-col justify-between">
+                <div className="flex items-center justify-between mb-2">
+                  <span className="text-xs font-medium text-emerald-700">
+                    SOC moyen (prévisions)
+                  </span>
+                  <TrendingUp className="w-4 h-4 text-emerald-600" />
+                </div>
+                <p className="text-2xl font-bold text-emerald-900 mb-1">
+                  {predictedPoints.length > 0
+                    ? `${avgPredictedSoc.toFixed(1)}%`
+                    : '--'}
+                </p>
+                <p className="text-xs text-emerald-700">
+                  Basé sur {predictedPoints.length} points futurs
+                </p>
+              </div>
+
+              {/* Carte 3 : Variation prochaine 24h */}
+              <div className="bg-emerald-50/70 rounded-2xl p-4 flex flex-col justify-between">
+                <div className="flex items-center justify-between mb-2">
+                  <span className="text-xs font-medium text-emerald-700">
+                    Prochaine fenêtre 24h
+                  </span>
+                  <Calendar className="w-4 h-4 text-emerald-600" />
+                </div>
+                <p className="text-2xl font-bold text-emerald-900 mb-1">
+                  {minNext24hSoc !== null && maxNext24hSoc !== null
+                    ? `${minNext24hSoc.toFixed(1)}–${maxNext24hSoc.toFixed(
+                        1
+                      )}%`
+                    : '--'}
+                </p>
+                <p className="text-xs text-emerald-700">
+                  Min / max SOC prévu sur les 24 prochaines heures
+                </p>
+              </div>
+
+              {/* Carte 4 : Autonomie estimée */}
+              <div className="bg-emerald-50/70 rounded-2xl p-4 flex flex-col justify-between">
+                <div className="flex items-center justify-between mb-2">
+                  <span className="text-xs font-medium text-emerald-700">
+                    Autonomie estimée
+                  </span>
+                  <Zap className="w-4 h-4 text-emerald-600" />
+                </div>
+                <p className="text-2xl font-bold text-emerald-900 mb-1">
+                  {estimatedAutonomyHours
+                    ? `${estimatedAutonomyHours.toFixed(1)} h`
+                    : '--'}
+                </p>
+                <p className="text-xs text-emerald-700">
+                  Calculée à partir de la consommation moyenne des 24
+                  dernières heures
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   );
