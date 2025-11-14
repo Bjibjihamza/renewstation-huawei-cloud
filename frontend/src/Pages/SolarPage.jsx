@@ -1,284 +1,366 @@
-// SolarPage.jsx (standalone, no tabs)
 import React, { useState, useEffect } from 'react';
 import {
   Sun,
   Zap,
   TrendingUp,
-  TrendingDown,
-  Building2,
-  Battery,
-  ArrowUpRight,
-  ArrowDownRight,
+  Activity,
   Calendar,
   CloudSun,
-  BarChart3,
-  Activity,
-  Filter,
-  Search,
+  Droplets,
+  Wind,
+  AlertCircle,
+  RefreshCw,
+  Database
 } from 'lucide-react';
 
 const API_BASE_URL = 'http://localhost:8000/api/solar';
 
-const SolarPage = () => {
-  const [solarData, setSolarData] = useState([]);
+const SolarProductionPage = () => {
+  const [archiveData, setArchiveData] = useState([]);
+  const [predictedData, setPredictedData] = useState([]);
   const [weatherData, setWeatherData] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [selectedPeriod, setSelectedPeriod] = useState('today'); // today, week, month
-  const [searchTerm, setSearchTerm] = useState('');
+  const [error, setError] = useState(null);
+  const [dataSource, setDataSource] = useState('unknown'); // 'real', 'predicted', or 'unknown'
 
   useEffect(() => {
-    fetchSolarData();
-    const interval = setInterval(fetchSolarData, 60000);
+    fetchAllData();
+    const interval = setInterval(fetchAllData, 60000);
     return () => clearInterval(interval);
   }, []);
 
-  const fetchSolarData = async () => {
+  const fetchAllData = async () => {
     try {
       setLoading(true);
-      const [solarRes, weatherRes] = await Promise.all([
-        fetch(`${API_BASE_URL}/predicted-solar-production?limit=500`),
-        fetch(`${API_BASE_URL}/weather-forecast-hourly?limit=100`)
+      setError(null);
+
+      const [archiveRes, predictedRes, weatherRes] = await Promise.all([
+        fetch(`${API_BASE_URL}/solar-production-archive?limit=168`),
+        fetch(`${API_BASE_URL}/predicted-solar-production?limit=168`),
+        fetch(`${API_BASE_URL}/weather-archive-hourly?limit=24`)
       ]);
 
-      const solarJson = await solarRes.json();
-      const weatherJson = await weatherRes.json();
+      const archive = archiveRes.ok ? (await archiveRes.json()).results || [] : [];
+      const predicted = predictedRes.ok ? (await predictedRes.json()).results || [] : [];
+      const weather = weatherRes.ok ? (await weatherRes.json()).results || [] : [];
 
-      setSolarData(solarJson.results || []);
-      setWeatherData(weatherJson.results || []);
+      console.log('Solar Data:', { archive: archive.length, predicted: predicted.length, weather: weather.length });
+
+      if (archive.length > 0) {
+        setDataSource('real');
+        setArchiveData(archive);
+      } else if (predicted.length > 0) {
+        setDataSource('predicted');
+        setPredictedData(predicted);
+      } else {
+        setDataSource('unknown');
+      }
+
+      setWeatherData(weather);
       setLoading(false);
-    } catch (error) {
-      console.error('Error fetching solar data:', error);
+    } catch (err) {
+      console.error('Fetch error:', err);
+      setError(err.message);
       setLoading(false);
     }
   };
 
   const calculateMetrics = () => {
-    if (!solarData.length) return { current: 0, today: 0, week: 0, efficiency: 0 };
+    const data = dataSource === 'real' ? archiveData : predictedData;
+    if (!data.length) {
+      return { currentPower: 0, todayProduction: 0, weekProduction: 0, efficiency: 0, peakPower: 0, avgRadiation: 0 };
+    }
+
+    const sorted = [...data].sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+    const latest = sorted[0];
+    const currentPower = parseFloat(latest.ac_power_kw || 0);
 
     const now = new Date();
-    const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate()).toISOString();
-    const weekStart = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000).toISOString();
+    const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    const todayData = sorted.filter(d => new Date(d.timestamp) >= todayStart);
+    const todayProduction = todayData.reduce((sum, d) => {
+      const val = dataSource === 'real' ? d.real_production_kwh : d.predicted_production_kwh;
+      return sum + parseFloat(val || 0);
+    }, 0);
 
-    const todayData = solarData.filter(d => d.timestamp >= todayStart);
-    const weekData = solarData.filter(d => d.timestamp >= weekStart);
+    const weekStart = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+    const weekData = sorted.filter(d => new Date(d.timestamp) >= weekStart);
+    const weekProduction = weekData.reduce((sum, d) => {
+      const val = dataSource === 'real' ? d.real_production_kwh : d.predicted_production_kwh;
+      return sum + parseFloat(val || 0);
+    }, 0);
 
-    const current = solarData[0]?.ac_power_kw || solarData[0]?.predicted_production_kwh || 0;
-    const today = todayData.reduce((sum, d) => sum + parseFloat(d.predicted_production_kwh || 0), 0);
-    const week = weekData.reduce((sum, d) => sum + parseFloat(d.predicted_production_kwh || 0), 0);
-    const efficiency = todayData.length > 0 
-      ? (today / (todayData.length * 0.75)) * 100 // 750kW capacity / 1000
-      : 0;
+    const peakPower = Math.max(...data.map(d => parseFloat(d.ac_power_kw || 0)));
+    const radiation = data.map(d => parseFloat(d.solar_radiation_w_m2 || 0)).filter(r => r > 0);
+    const avgRadiation = radiation.length ? radiation.reduce((a, b) => a + b, 0) / radiation.length : 0;
 
-    return { current, today, week, efficiency: Math.min(efficiency, 100) };
+    const efficiency = currentPower > 0 ? (currentPower / 750 * 100) : 0;
+
+    return {
+      currentPower: currentPower.toFixed(1),
+      todayProduction: todayProduction.toFixed(1),
+      weekProduction: weekProduction.toFixed(0),
+      efficiency: efficiency.toFixed(0),
+      peakPower: peakPower.toFixed(1),
+      avgRadiation: avgRadiation.toFixed(0)
+    };
   };
 
-  const getChartData = () => {
-    const now = new Date();
-    const filtered = solarData.filter(d => {
-      const ts = new Date(d.timestamp);
-      if (selectedPeriod === 'today') {
-        return ts.toDateString() === now.toDateString();
-      } else if (selectedPeriod === 'week') {
-        return ts >= new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
-      }
-      return ts >= new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
-    });
-
-    return filtered.slice(0, 24).map(d => ({
-      label: new Date(d.timestamp).getHours() + 'h',
-      value: parseFloat(d.predicted_production_kwh || 0),
-      temp: parseFloat(d.temperature_c || 0),
-      radiation: parseFloat(d.solar_radiation_w_m2 || 0)
-    }));
+  const getHourlyData = () => {
+    const data = dataSource === 'real' ? archiveData : predictedData;
+    return data
+      .slice(0, 24)
+      .sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp))
+      .map(d => ({
+        time: new Date(d.timestamp).getHours() + 'h',
+        power: parseFloat(d.ac_power_kw || 0).toFixed(1),
+        production: (dataSource === 'real' ? d.real_production_kwh : d.predicted_production_kwh || 0).toFixed(2),
+        radiation: parseFloat(d.solar_radiation_w_m2 || 0).toFixed(0),
+        temp: parseFloat(d.temperature_c || 0).toFixed(1),
+        clouds: parseFloat(d.cloud_cover_pct || 0).toFixed(0)
+      }));
   };
 
   const getCurrentWeather = () => {
     if (!weatherData.length) return null;
-    return weatherData[0];
+    const latest = weatherData[0];
+    return {
+      temp: parseFloat(latest.temperature_c || 0).toFixed(1),
+      humidity: parseFloat(latest.humidity_pct || 0).toFixed(0),
+      clouds: parseFloat(latest.cloud_cover_pct || 0).toFixed(0),
+      radiation: parseFloat(latest.solar_radiation_w_m2 || 0).toFixed(0)
+    };
   };
 
   const metrics = calculateMetrics();
-  const chartData = getChartData();
+  const hourlyData = getHourlyData();
   const weather = getCurrentWeather();
 
-  if (loading && !solarData.length) {
+  if (loading) {
     return (
-      <div className="flex items-center justify-center h-screen">
+      <div className="min-h-screen bg-gradient-to-br from-green-50 via-emerald-50 to-teal-50 flex items-center justify-center">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-t-4 border-emerald-600 mx-auto mb-4"></div>
-          <p className="text-emerald-800">Chargement des données solaires...</p>
+          <div className="animate-spin rounded-full h-16 w-16 border-t-4 border-emerald-600 mx-auto mb-4"></div>
+          <p className="text-emerald-800 font-medium">Chargement des données solaires...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-green-50 via-emerald-50 to-teal-50 flex items-center justify-center p-8">
+        <div className="bg-white/60 backdrop-blur-sm rounded-3xl p-8 max-w-md shadow-lg text-center">
+          <AlertCircle className="w-12 h-12 text-red-500 mx-auto mb-4" />
+          <h3 className="text-xl font-bold text-red-800 mb-2">Erreur de Connexion</h3>
+          <p className="text-red-600 mb-4">{error}</p>
+          <button
+            onClick={fetchAllData}
+            className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-emerald-600 text-white font-medium hover:bg-emerald-700 transition-colors"
+          >
+            <RefreshCw className="w-4 h-4" />
+            Réessayer
+          </button>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="p-8 space-y-6">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold text-emerald-900">Production Solaire</h1>
-          <p className="text-emerald-600 mt-1">Système photovoltaïque 750 kW - 1364 panneaux</p>
-        </div>
-        <div className="flex gap-3">
-          {['today', 'week', 'month'].map(period => (
+    <div className="min-h-screen bg-gradient-to-br from-green-50 via-emerald-50 to-teal-50 p-8">
+      <div className="max-w-7xl mx-auto space-y-6">
+        {/* Header */}
+        <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4">
+          <div>
+            <h1 className="text-3xl font-bold text-emerald-900 flex items-center gap-3">
+              <Sun className="w-8 h-8 text-emerald-600" />
+              Production Solaire
+            </h1>
+            <p className="text-emerald-700 mt-1">
+              Système photovoltaïque 750 kW - 1364 panneaux
+            </p>
+          </div>
+
+          <div className="flex items-center gap-3">
             <button
-              key={period}
-              onClick={() => setSelectedPeriod(period)}
-              className={`px-4 py-2 rounded-xl text-sm font-medium transition-all ${
-                selectedPeriod === period
-                  ? 'bg-emerald-600 text-white shadow-lg'
-                  : 'bg-white/60 text-emerald-700 hover:bg-white'
-              }`}
+              onClick={fetchAllData}
+              className="p-2.5 bg-white/60 backdrop-blur-sm rounded-xl hover:bg-white shadow-sm transition-all"
+              title="Rafraîchir"
             >
-              {period === 'today' ? "Aujourd'hui" : period === 'week' ? 'Semaine' : 'Mois'}
+              <RefreshCw className={`w-4 h-4 text-emerald-700 ${loading ? 'animate-spin' : ''}`} />
             </button>
-          ))}
-        </div>
-      </div>
 
-      {/* KPI Cards */}
-      <div className="grid grid-cols-4 gap-6">
-        <div className="bg-gradient-to-br from-yellow-400/20 to-orange-400/20 backdrop-blur-sm rounded-2xl p-6">
-          <div className="flex items-center justify-between mb-3">
-            <Sun className="w-8 h-8 text-yellow-600" />
-            <div className="flex items-center gap-1 text-green-600 text-sm">
-              <TrendingUp className="w-4 h-4" />
-              <span>+12%</span>
-            </div>
-          </div>
-          <p className="text-sm text-emerald-700 mb-1">Production Actuelle</p>
-          <p className="text-3xl font-bold text-emerald-900">{metrics.current.toFixed(1)} kW</p>
-        </div>
-
-        <div className="bg-white/40 backdrop-blur-sm rounded-2xl p-6">
-          <div className="flex items-center justify-between mb-3">
-            <Zap className="w-8 h-8 text-emerald-600" />
-            <Calendar className="w-5 h-5 text-emerald-400" />
-          </div>
-          <p className="text-sm text-emerald-700 mb-1">Production Aujourd'hui</p>
-          <p className="text-3xl font-bold text-emerald-900">{metrics.today.toFixed(1)} kWh</p>
-        </div>
-
-        <div className="bg-white/40 backdrop-blur-sm rounded-2xl p-6">
-          <div className="flex items-center justify-between mb-3">
-            <BarChart3 className="w-8 h-8 text-blue-600" />
-            <div className="flex items-center gap-1 text-blue-600 text-sm">
-              <TrendingUp className="w-4 h-4" />
-              <span>+8%</span>
-            </div>
-          </div>
-          <p className="text-sm text-emerald-700 mb-1">Cette Semaine</p>
-          <p className="text-3xl font-bold text-emerald-900">{metrics.week.toFixed(0)} kWh</p>
-        </div>
-
-        <div className="bg-gradient-to-br from-emerald-400/20 to-teal-400/20 backdrop-blur-sm rounded-2xl p-6">
-          <div className="flex items-center justify-between mb-3">
-            <Activity className="w-8 h-8 text-emerald-600" />
-            <div className={`w-2 h-2 rounded-full ${metrics.efficiency > 70 ? 'bg-green-500' : 'bg-yellow-500'} animate-pulse`}></div>
-          </div>
-          <p className="text-sm text-emerald-700 mb-1">Efficacité</p>
-          <p className="text-3xl font-bold text-emerald-900">{metrics.efficiency.toFixed(0)}%</p>
-        </div>
-      </div>
-
-      {/* Main Chart & Weather */}
-      <div className="grid grid-cols-3 gap-6">
-        {/* Production Chart */}
-        <div className="col-span-2 bg-white/40 backdrop-blur-sm rounded-2xl p-6">
-          <h3 className="text-lg font-bold text-emerald-900 mb-6">Production Horaire</h3>
-          <div className="flex items-end justify-between gap-2 h-64">
-            {chartData.map((data, idx) => (
-              <div key={idx} className="flex flex-col items-center gap-2 flex-1">
-                <div className="relative w-full h-full flex flex-col justify-end">
-                  <div
-                    className="w-full bg-gradient-to-t from-yellow-400 to-orange-400 rounded-t-lg transition-all hover:opacity-80 cursor-pointer"
-                    style={{ height: `${(data.value / Math.max(...chartData.map(d => d.value))) * 100}%` }}
-                    title={`${data.value.toFixed(2)} kWh\nTemp: ${data.temp.toFixed(1)}°C\nRadiation: ${data.radiation.toFixed(0)} W/m²`}
-                  ></div>
-                </div>
-                <span className="text-xs text-emerald-600">{data.label}</span>
+            {dataSource === 'predicted' && (
+              <div className="flex items-center gap-2 bg-yellow-100/80 backdrop-blur-sm border border-yellow-300 text-yellow-800 px-4 py-2 rounded-xl text-sm font-medium">
+                <AlertCircle className="w-4 h-4" />
+                Données prédites
               </div>
-            ))}
-          </div>
-        </div>
-
-        {/* Weather & Conditions */}
-        <div className="space-y-4">
-          <div className="bg-gradient-to-br from-blue-400/20 to-cyan-400/20 backdrop-blur-sm rounded-2xl p-6">
-            <div className="flex items-center gap-2 mb-4">
-              <CloudSun className="w-6 h-6 text-blue-600" />
-              <h3 className="text-lg font-bold text-emerald-900">Conditions Météo</h3>
-            </div>
-            {weather ? (
-              <div className="space-y-3">
-                <div className="flex justify-between items-center">
-                  <span className="text-sm text-emerald-700">Température</span>
-                  <span className="font-bold text-emerald-900">{parseFloat(weather.temperature_c || 0).toFixed(1)}°C</span>
-                </div>
-                <div className="flex justify-between items-center">
-                  <span className="text-sm text-emerald-700">Humidité</span>
-                  <span className="font-bold text-emerald-900">{parseFloat(weather.humidity_pct || 0).toFixed(0)}%</span>
-                </div>
-                <div className="flex justify-between items-center">
-                  <span className="text-sm text-emerald-700">Couverture</span>
-                  <span className="font-bold text-emerald-900">{parseFloat(weather.cloud_cover_pct || 0).toFixed(0)}%</span>
-                </div>
-                <div className="flex justify-between items-center">
-                  <span className="text-sm text-emerald-700">Radiation</span>
-                  <span className="font-bold text-emerald-900">{parseFloat(weather.solar_radiation_w_m2 || 0).toFixed(0)} W/m²</span>
-                </div>
+            )}
+            {dataSource === 'real' && (
+              <div className="flex items-center gap-2 bg-emerald-100/80 backdrop-blur-sm border border-emerald-300 text-emerald-800 px-4 py-2 rounded-xl text-sm font-medium">
+                <Database className="w-4 h-4" />
+                Données réelles
               </div>
-            ) : (
-              <p className="text-sm text-emerald-600">Données non disponibles</p>
             )}
           </div>
+        </div>
 
-          <div className="bg-white/40 backdrop-blur-sm rounded-2xl p-6">
-            <h3 className="text-lg font-bold text-emerald-900 mb-4">État du Système</h3>
-            <div className="space-y-3 text-sm">
-              <div className="flex justify-between">
-                <span className="text-emerald-700">Panneaux actifs</span>
-                <span className="font-semibold text-green-600">1364 / 1364</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-emerald-700">Capacité totale</span>
-                <span className="font-semibold text-emerald-900">750 kW</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-emerald-700">Onduleurs</span>
-                <span className="font-semibold text-green-600">Tous OK</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-emerald-700">Données en temps réel</span>
-                <span className="font-semibold text-green-600">✓ Actif</span>
-              </div>
+        {/* KPI Cards */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+          <div className="bg-gradient-to-br from-emerald-400/30 to-teal-400/30 backdrop-blur-sm rounded-3xl p-6 shadow-lg">
+            <Sun className="w-8 h-8 text-emerald-600 mx-auto mb-2" />
+            <p className="text-sm text-emerald-700 mb-1 text-center">Production Actuelle</p>
+            <p className="text-4xl font-bold text-emerald-900 text-center">{metrics.currentPower}</p>
+            <p className="text-sm text-emerald-600 text-center">kW</p>
+          </div>
+
+          <div className="bg-white/40 backdrop-blur-sm rounded-3xl p-6 shadow-lg">
+            <Zap className="w-8 h-8 text-emerald-600 mx-auto mb-2" />
+            <p className="text-sm text-emerald-700 mb-1 text-center">Aujourd'hui</p>
+            <p className="text-4xl font-bold text-emerald-900 text-center">{metrics.todayProduction}</p>
+            <p className="text-sm text-emerald-600 text-center">kWh</p>
+          </div>
+
+          <div className="bg-white/40 backdrop-blur-sm rounded-3xl p-6 shadow-lg">
+            <Calendar className="w-8 h-8 text-teal-600 mx-auto mb-2" />
+            <p className="text-sm text-emerald-700 mb-1 text-center">Cette Semaine</p>
+            <p className="text-4xl font-bold text-emerald-900 text-center">{metrics.weekProduction}</p>
+            <p className="text-sm text-emerald-600 text-center">kWh</p>
+          </div>
+
+          <div className="bg-gradient-to-br from-green-400/30 to-emerald-400/30 backdrop-blur-sm rounded-3xl p-6 shadow-lg">
+            <Activity className="w-8 h-8 text-green-600 mx-auto mb-2" />
+            <p className="text-sm text-emerald-700 mb-1 text-center">Efficacité</p>
+            <p className="text-4xl font-bold text-emerald-900 text-center">{metrics.efficiency}%</p>
+            <div className="w-full bg-emerald-100 rounded-full h-2 mt-3">
+              <div
+                className="bg-gradient-to-r from-emerald-400 to-green-500 h-2 rounded-full transition-all"
+                style={{ width: `${metrics.efficiency}%` }}
+              ></div>
             </div>
           </div>
         </div>
-      </div>
 
-      {/* Recent Predictions */}
-      <div className="bg-white/40 backdrop-blur-sm rounded-2xl p-6">
-        <h3 className="text-lg font-bold text-emerald-900 mb-4">Prévisions Production (Prochaines 24h)</h3>
-        <div className="grid grid-cols-8 gap-3">
-          {solarData.slice(0, 8).map((data, idx) => {
-            const ts = new Date(data.timestamp);
-            const production = parseFloat(data.predicted_production_kwh || 0);
+        {/* Weather */}
+        {weather && (
+          <div className="bg-white/40 backdrop-blur-sm rounded-3xl p-6 shadow-lg">
+            <h3 className="text-lg font-bold text-emerald-900 mb-4 flex items-center gap-2">
+              <CloudSun className="w-5 h-5 text-teal-600" />
+              Conditions Météo Actuelles
+            </h3>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              <div className="text-center">
+                <p className="text-sm text-emerald-700">Température</p>
+                <p className="text-2xl font-bold text-emerald-900">{weather.temp}°C</p>
+              </div>
+              <div className="text-center">
+                <Droplets className="w-6 h-6 text-blue-600 mx-auto mb-1" />
+                <p className="text-sm text-emerald-700">Humidité</p>
+                <p className="text-2xl font-bold text-emerald-900">{weather.humidity}%</p>
+              </div>
+              <div className="text-center">
+                <Wind className="w-6 h-6 text-gray-600 mx-auto mb-1" />
+                <p className="text-sm text-emerald-700">Couverture</p>
+                <p className="text-2xl font-bold text-emerald-900">{weather.clouds}%</p>
+              </div>
+              <div className="text-center">
+                <Sun className="w-6 h-6 text-yellow-500 mx-auto mb-1" />
+                <p className="text-sm text-emerald-700">Radiation</p>
+                <p className="text-2xl font-bold text-emerald-900">{weather.radiation}</p>
+                <p className="text-xs text-emerald-600">W/m²</p>
+              </div>
+            </div>
+          </div>
+        )}
+{/* Hourly Chart - 8h to 21h only */}
+<div className="bg-white/40 backdrop-blur-sm rounded-3xl p-6 shadow-lg">
+  <h3 className="text-lg font-bold text-emerald-900 mb-4">Production Horaire</h3>
+  
+  <div className="overflow-x-auto">
+    {/* This container centers the bars when they don't fill the width */}
+    <div className="flex justify-center pb-4">
+      <div className="flex gap-2">
+        {hourlyData
+          .filter(d => {
+            const hour = parseInt(d.time);
+            return hour >= 8 && hour <= 21;
+          })
+          .map((d, i) => {
+            const filteredData = hourlyData.filter(x => {
+              const h = parseInt(x.time);
+              return h >= 8 && h <= 21;
+            });
+            const max = Math.max(...filteredData.map(x => parseFloat(x.power)));
+            const height = max > 0 ? (parseFloat(d.power) / max) * 100 : 0;
+
             return (
-              <div key={idx} className="bg-white/60 rounded-xl p-4 text-center">
-                <p className="text-xs text-emerald-600 mb-2">
-                  {ts.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}
-                </p>
-                <p className="text-lg font-bold text-emerald-900">{production.toFixed(1)}</p>
-                <p className="text-xs text-emerald-600">kWh</p>
+              <div key={i} className="flex flex-col items-center gap-2 min-w-[60px]">
+                <div className="relative h-40 w-full bg-orange-50/50 rounded-lg flex items-end justify-center">
+                  <div
+                    className="w-full bg-gradient-to-t from-orange-500 to-yellow-400 rounded-t-lg transition-all hover:from-orange-600 hover:to-yellow-500 cursor-pointer shadow-sm"
+                    style={{ height: `${height}%` }}
+                    title={`${d.time}: ${d.power} kW (${d.production} kWh)`}
+                  >
+                    <div className="absolute -top-7 left-1/2 -translate-x-1/2 bg-orange-900 text-white text-xs px-2 py-1 rounded opacity-0 hover:opacity-100 transition-opacity whitespace-nowrap">
+                      {d.power} kW ({d.production} kWh)
+                    </div>
+                  </div>
+                </div>
+                <p className="text-xs font-medium text-orange-800">{d.time}</p>
+                <p className="text-xs text-orange-600">{d.production} kWh</p>
               </div>
             );
           })}
+      </div>
+    </div>
+  </div>
+</div>
+
+        {/* Prévisions (si prédites) */}
+        {dataSource === 'predicted' && (
+          <div className="bg-white/40 backdrop-blur-sm rounded-3xl p-6 shadow-lg">
+            <h3 className="text-lg font-bold text-emerald-900 mb-4">Prévisions (Prochaines 8h)</h3>
+            <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-8 gap-3">
+              {hourlyData.slice(0, 8).map((d, i) => (
+                <div key={i} className="bg-white/60 backdrop-blur-sm rounded-xl p-3 text-center shadow-sm">
+                  <p className="text-xs text-emerald-700 mb-1">{d.time}</p>
+                  <p className="text-lg font-bold text-emerald-900">{d.power}</p>
+                  <p className="text-xs text-emerald-600">kW</p>
+                  <div className="mt-2 text-xs text-emerald-600 space-y-1">
+                    <div>Radiation {d.radiation}W</div>
+                    <div>Clouds {d.clouds}%</div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* System Status */}
+        <div className="bg-white/40 backdrop-blur-sm rounded-3xl p-6 shadow-lg">
+          <h3 className="text-lg font-bold text-emerald-900 mb-4">État du Système</h3>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 text-sm">
+            <div className="flex justify-between">
+              <span className="text-emerald-700">Panneaux</span>
+              <span className="font-bold text-emerald-900">1364 / 1364</span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-emerald-700">Capacité</span>
+              <span className="font-bold text-emerald-900">750 kW</span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-emerald-700">Onduleurs</span>
+              <span className="font-bold text-green-600">OK</span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-emerald-700">Connexion</span>
+              <span className="font-bold text-green-600">Active</span>
+            </div>
+          </div>
         </div>
       </div>
     </div>
   );
 };
 
-export default SolarPage;
+export default SolarProductionPage;

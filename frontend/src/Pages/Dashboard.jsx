@@ -14,6 +14,7 @@ import Battery from './Battery';
 import EnergyPage from './EnergyPage';
 import SolarPage from './SolarPage';
 import WeatherPage from './WeatherPage';
+import Test from  './test'
 
 const Dashboard = () => {
   const [activePage, setActivePage] = useState('overview');
@@ -25,6 +26,7 @@ const Dashboard = () => {
     { id: 'energy', name: 'Consommation', icon: BarChart3 },
     { id: 'solar', name: 'Production Solaire', icon: Zap },
     { id: 'weather', name: 'Météo', icon: CloudSun },
+    { id: 'test', name: 'test', icon: CloudSun },
   ];
 
   return (
@@ -98,6 +100,8 @@ const Dashboard = () => {
         {activePage === 'energy' && <EnergyPage />}
         {activePage === 'solar' && <SolarPage />}
         {activePage === 'weather' && <WeatherPage />}
+        {activePage === 'test' && <Test />}
+
       </div>
     </div>
   );
