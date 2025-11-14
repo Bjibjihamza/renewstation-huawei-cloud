@@ -15,6 +15,7 @@ if os.path.exists(".env.local"):
 else:
     load_dotenv()
 
+
 DB_HOST = os.getenv("GAUSSDB_HOST", "postgres")
 DB_PORT = int(os.getenv("GAUSSDB_PORT", "5432"))
 DB_NAME = os.getenv("GAUSSDB_DB_SILVER", "silver")
@@ -37,6 +38,7 @@ def get_db_connection():
 # -------------------------------------------------------------------------
 # HELPERS
 # -------------------------------------------------------------------------
+
 def _normalize_timestamp(df: pd.DataFrame, col: str = "timestamp") -> pd.DataFrame:
     """
     Force timestamps to be timezone-naive (TIMESTAMP WITHOUT TIME ZONE).
@@ -46,12 +48,11 @@ def _normalize_timestamp(df: pd.DataFrame, col: str = "timestamp") -> pd.DataFra
 
     df[col] = pd.to_datetime(df[col])
 
-    # Si timezone-aware → convert to UTC puis drop tz
+
     try:
         if df[col].dt.tz is not None:
             df[col] = df[col].dt.tz_convert("UTC").dt.tz_localize(None)
     except AttributeError:
-        # pas de propriété tz → déjà naive
         pass
 
     return df
