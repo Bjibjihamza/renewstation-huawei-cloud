@@ -1,0 +1,170 @@
+version: "3.9"
+
+services:
+  # -----------------------------------------------------------
+  # 1) Airflow - INIT (migrations + création user admin)
+  # -----------------------------------------------------------
+  airflow-init:
+    build:
+      context: ./airflow
+      dockerfile: Dockerfile
+    container_name: renewstation-airflow-init
+    restart: "no"
+    environment:
+      AIRFLOW__CORE__EXECUTOR: LocalExecutor
+      AIRFLOW__CORE__FERNET_KEY: ${AIRFLOW__CORE__FERNET_KEY}
+      AIRFLOW__CORE__LOAD_EXAMPLES: "False"
+
+      # 🔗 Connexion vers GaussDB (PAS de postgres local)
+      AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: >-
+        postgresql+psycopg2://${GAUSSDB_USER}:${GAUSSDB_PASSWORD}@${GAUSSDB_HOST}:${GAUSSDB_PORT:-5432}/${GAUSSDB_DB_SILVER}
+
+      # Création user admin
+      _AIRFLOW_DB_MIGRATE: "true"
+      _AIRFLOW_WWW_USER_CREATE: "true"
+      _AIRFLOW_WWW_USER_USERNAME: ${AIRFLOW_ADMIN_USERNAME:-admin}
+      _AIRFLOW_WWW_USER_PASSWORD: ${AIRFLOW_ADMIN_PASSWORD:-admin}
+    volumes:
+      # 🧠 adapter selon où tu mets tes fichiers Airflow
+      - ./airflow/dags:/opt/airflow/dags
+      - ./airflow/logs:/opt/airflow/logs
+      - ./airflow/plugins:/opt/airflow/plugins
+      - ./airflow/src:/opt/airflow/src
+      - ./airflow/models:/opt/airflow/models:ro
+    entrypoint: /bin/bash
+    command:
+      - -c
+      - |
+        airflow db migrate
+        airflow users create \
+          --username "$${_AIRFLOW_WWW_USER_USERNAME}" \
+          --firstname Admin \
+          --lastname User \
+          --role Admin \
+          --email admin@example.com \
+          --password "$${_AIRFLOW_WWW_USER_PASSWORD}" || true
+        echo "✅ Airflow DB initialized (GaussDB)"
+
+  # -----------------------------------------------------------
+  # 2) Airflow - Webserver (UI pour admins)
+  # -----------------------------------------------------------
+  airflow-webserver:
+    build:
+      context: ./airflow
+      dockerfile: Dockerfile
+    container_name: renewstation-airflow-web
+    restart: unless-stopped
+    depends_on:
+      airflow-init:
+        condition: service_completed_successfully
+    environment:
+      AIRFLOW__CORE__EXECUTOR: LocalExecutor
+      AIRFLOW__CORE__FERNET_KEY: ${AIRFLOW__CORE__FERNET_KEY}
+      AIRFLOW__CORE__LOAD_EXAMPLES: "False"
+      AIRFLOW__WEBSERVER__RBAC: "True"
+      AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: >-
+        postgresql+psycopg2://${GAUSSDB_USER}:${GAUSSDB_PASSWORD}@${GAUSSDB_HOST}:${GAUSSDB_PORT:-5432}/${GAUSSDB_DB_SILVER}
+    volumes:
+      - ./airflow/dags:/opt/airflow/dags
+      - ./airflow/logs:/opt/airflow/logs
+      - ./airflow/plugins:/opt/airflow/plugins
+      - ./airflow/src:/opt/airflow/src
+      - ./airflow/models:/opt/airflow/models:ro
+    command: webserver
+    ports:
+      - "8080:8080"          # ⚠️ exposé uniquement dans le SG (admin)
+    healthcheck:
+      test: ["CMD", "curl", "--fail", "http://localhost:8080/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 30s
+
+  # -----------------------------------------------------------
+  # 3) Airflow - Scheduler (orchestration des DAGs)
+  # -----------------------------------------------------------
+  airflow-scheduler:
+    build:
+      context: ./airflow
+      dockerfile: Dockerfile
+    container_name: renewstation-airflow-scheduler
+    restart: unless-stopped
+    depends_on:
+      airflow-init:
+        condition: service_completed_successfully
+    environment:
+      AIRFLOW__CORE__EXECUTOR: LocalExecutor
+      AIRFLOW__CORE__FERNET_KEY: ${AIRFLOW__CORE__FERNET_KEY}
+      AIRFLOW__CORE__LOAD_EXAMPLES: "False"
+      AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: >-
+        postgresql+psycopg2://${GAUSSDB_USER}:${GAUSSDB_PASSWORD}@${GAUSSDB_HOST}:${GAUSSDB_PORT:-5432}/${GAUSSDB_DB_SILVER}
+    volumes:
+      - ./airflow/dags:/opt/airflow/dags
+      - ./airflow/logs:/opt/airflow/logs
+      - ./airflow/plugins:/opt/airflow/plugins
+      - ./airflow/src:/opt/airflow/src
+      - ./airflow/models:/opt/airflow/models:ro
+    command: scheduler
+    healthcheck:
+      test: ["CMD-SHELL", "airflow jobs check --job-type SchedulerJob --hostname $(hostname)"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 30s
+
+  # -----------------------------------------------------------
+  # 4) API Node.js – parle à GaussDB
+  # -----------------------------------------------------------
+  api:
+    build:
+      context: ./api
+      dockerfile: Dockerfile
+    container_name: renewstation-api
+    restart: unless-stopped
+    environment:
+      NODE_ENV: production
+
+      # 🔗 Connexion GaussDB (PAS de postgres container)
+      DB_HOST: ${GAUSSDB_HOST}
+      DB_PORT: ${GAUSSDB_PORT:-5432}
+      DB_NAME: ${GAUSSDB_DB_SILVER}
+      DB_USER: ${GAUSSDB_USER}
+      DB_PASSWORD: ${GAUSSDB_PASSWORD}
+
+      PORT: 8000
+    ports:
+      - "8000:8000"          # ⚠️ à restreindre au VPC / SG (backend only)
+    depends_on:
+      airflow-scheduler:
+        condition: service_started
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://localhost:8000/health"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+
+  # -----------------------------------------------------------
+  # 5) Frontend – Dashboard React/Vite + Nginx
+  # -----------------------------------------------------------
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: renewstation-frontend
+    restart: unless-stopped
+    environment:
+      # URL de l’API telle qu’elle sera vue par le navigateur
+      # ex: https://api.renewstation.your-domain.com
+      VITE_API_URL: ${VITE_API_URL}
+    ports:
+      - "80:80"              # 🌍 exposé via EIP / ELB / HTTPS (Nginx)
+    depends_on:
+      api:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://localhost/health"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
