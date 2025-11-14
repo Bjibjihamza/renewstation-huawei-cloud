@@ -67,6 +67,7 @@ RenewStation est une plateforme complète de gestion et prédiction énergétiqu
 │  DAGs:                                                       │
 │  • daily_prediction_pipeline (00:00 quotidien)              │
 │  • initialization_pipeline (setup initial)                  │
+│  • mlops_retrain_pipeline (00:00 quotidien - MLOps retrain) │
 └──────────────────────────────────────────────────────────────┘
                       │
                       ├─→ ML Training & Inference
@@ -135,7 +136,8 @@ renewstation-huawei-cloud/
 │
 ├── 📂 dags/                             # Airflow DAGs
 │   ├── daily_prediction_pipeline.py    # Pipeline quotidien 00:00
-│   └── initialization_pipeline.py      # Setup initial (run once)
+│   ├── initialization_pipeline.py      # Setup initial (run once)
+│   └── mlops_retrain_pipeline.py       # MLOps: Retrain quotidien du modèle ML (00:00)
 │
 ├── 📂 src/                              # Code Pipeline Python
 │   ├── pipeline/
@@ -411,15 +413,19 @@ Le modèle est entraîné sur **278 647 points de données réelles** couvrant:
 
 #### Ré-entraînement
 
+Le ré-entraînement est automatisé via MLOps pour maintenir la précision du modèle avec les données récentes. Il nettoie les anciens fichiers modèles pour optimiser le stockage.
+
 ```bash
 # Commande manuelle
 docker exec -it renewstation-airflow-scheduler \
   python -m src.pipeline.ml.train_energy_model
 
-# Automatique via DAG (à programmer si besoin)
+# Automatique via DAG (quotidien à 00:00)
+docker exec -it renewstation-airflow-scheduler \
+  airflow dags trigger mlops_retrain_pipeline
 ```
 
-Le fichier `models/energy_predictor.pkl` est **écrasé automatiquement** à chaque entraînement.
+Le fichier `models/energy_predictor.pkl` est **écrasé automatiquement** à chaque entraînement, évitant l'accumulation de stockage.
 
 ---
 
@@ -893,8 +899,6 @@ docker exec -it renewstation-airflow-scheduler \
 
 **Durée:** ~5-8 minutes
 
----
-
 ### 2. daily_prediction_pipeline.py (Quotidien 00:00)
 
 **Description:** Pipeline principal de prédiction, s'exécute chaque jour à minuit.
@@ -1013,6 +1017,46 @@ docker exec -it renewstation-airflow-scheduler \
 # Logs détaillés d'une task
 docker exec -it renewstation-airflow-scheduler \
   airflow tasks logs daily_prediction_pipeline generate_energy_prediction_7d_task 2025-11-14
+```
+
+### 3. mlops_retrain_pipeline.py (Quotidien 00:00 - MLOps)
+
+**Description:** Pipeline MLOps pour le ré-entraînement quotidien du modèle ML. Nettoie les anciens fichiers modèles pour optimiser le stockage avant de ré-entraîner sur les données les plus récentes.
+
+**Fréquence:** `@daily` (00:00 UTC, avant ou en parallèle du pipeline de prédiction)
+
+**Tasks (ordre d'exécution):**
+- `cleanup_old_models` - Supprime tous les fichiers `.pkl` existants dans `/opt/airflow/models` pour libérer l'espace.
+- `retrain_energy_model` - Exécute le script d'entraînement pour générer un nouveau `energy_predictor.pkl`.
+
+**Visualisation DAG:**
+```
+start
+    ↓
+cleanup_old_models
+    ↓
+retrain_energy_model
+    ↓
+end
+```
+
+**Commande:**
+```bash
+docker exec -it renewstation-airflow-scheduler \
+  airflow dags trigger mlops_retrain_pipeline
+```
+
+**Durée:** ~10-15 minutes (dépend de la taille des données d'entraînement)
+
+**Logs en temps réel:**
+```bash
+# Suivre l'exécution du DAG
+docker exec -it renewstation-airflow-scheduler \
+  airflow dags list-runs -d mlops_retrain_pipeline --state running
+
+# Logs détaillés d'une task
+docker exec -it renewstation-airflow-scheduler \
+  airflow tasks logs mlops_retrain_pipeline retrain_energy_model 2025-11-14
 ```
 
 ---
@@ -1157,6 +1201,10 @@ chmod +x monitor.sh
 # Check si le DAG s'est bien exécuté cette nuit
 docker exec renewstation-airflow-scheduler \
   airflow dags list-runs -d daily_prediction_pipeline --state success | head -5
+
+# Check MLOps retrain DAG
+docker exec renewstation-airflow-scheduler \
+  airflow dags list-runs -d mlops_retrain_pipeline --state success | head -5
 ```
 
 #### 2. Vérifier Fraîcheur Données
@@ -1175,8 +1223,10 @@ FROM predicted_energy_consumption_hourly;
 
 #### 1. Ré-entraîner le Modèle ML
 
+Le ré-entraînement est maintenant automatisé quotidiennement via MLOps. Vérifiez manuellement si nécessaire :
+
 ```bash
-# Tous les lundis par exemple
+# Tous les lundis par exemple (manuel si besoin)
 docker exec -it renewstation-airflow-scheduler \
   python -m src.pipeline.ml.train_energy_model
 
@@ -1869,7 +1919,21 @@ logs/
 
 ---
 
+## 📞 Support & Contact
 
+Pour toute question ou problème:
+
+- **Repository GitHub:** [renewstation-huawei-cloud](https://github.com/Bjibjihamza/renewstation-huawei-cloud)
+- **Issues:** Ouvrir un ticket sur GitHub
+- **Documentation:** Ce README.md
+
+---
+
+## 📄 Licence
+
+[À définir selon votre projet]
+
+---
 
 **Dernière mise à jour:** Novembre 2025  
 **Version:** 3.0.0
